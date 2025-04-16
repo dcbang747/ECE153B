@@ -67,7 +67,7 @@ void RTC_Init(void) {
 	// Configure the Date 
 	/* Note: __LL_RTC_CONVERT_BIN2BCD helper macro can be used if user wants to */
 	/*       provide directly the decimal value:                                */
-	RTC_Set_Calendar_Date(RTC_WEEKDAY_WEDNESDAY, 0x01, RTC_MONTH_JANUARY, 0x20); /* [TODO] These values are stubs - fill in current date */
+	RTC_Set_Calendar_Date(RTC_WEEKDAY_WEDNESDAY, 0x16, RTC_MONTH_APRIL, 0x20); /* [TODO] These values are stubs - fill in current date */
 	
 	// Configure the Time 
 	RTC_Set_Time(RTC_TR_PM, 0x07, 0x00, 0x00); /* [TODO] These values are stubs - fill in current time */
@@ -101,12 +101,40 @@ void RTC_Init(void) {
 #define RTC_POSITION_DR_DU    (uint32_t)POSITION_VAL(RTC_DR_DU)
 #define RTC_POSITION_DR_WDU   (uint32_t)POSITION_VAL(RTC_DR_WDU)
 
-void RTC_Set_Calendar_Date(uint32_t WeekDay, uint32_t Day, uint32_t Month, uint32_t Year) {
-	// [TODO] Write the date values in the correct place within the RTC Date Register
+void RTC_Set_Calendar_Date(uint32_t WeekDay, uint32_t Day, uint32_t Month,uint32_t Year)
+{
+    uint32_t dr = 0;
+
+    dr |= (WeekDay & 0x7U) << RTC_POSITION_DR_WDU;
+
+    dr |= ((Month >> 4) & 0x1U) << RTC_POSITION_DR_MT;  /* month tens (bit 12) */
+    dr |= ( Month        & 0xFU) << RTC_POSITION_DR_MU; /* month units        */
+
+    dr |= ((Day >> 4)   & 0x3U) << RTC_POSITION_DR_DT;  /* date tens  (bits 5‑4) */
+    dr |= ( Day         & 0xFU) << RTC_POSITION_DR_DU;  /* date units          */
+
+    dr |= ((Year >> 4)  & 0xFU) << RTC_POSITION_DR_YT;  /* year tens           */
+    dr |= ( Year        & 0xFU) << RTC_POSITION_DR_YU;  /* year units          */
+
+    RTC->DR = dr;
 }
 
-void RTC_Set_Time(uint32_t Format12_24, uint32_t Hour, uint32_t Minute, uint32_t Second) {
-	// [TODO] Write the time values in the correct place within the RTC Time Register
+void RTC_Set_Time(uint32_t Format12_24, uint32_t Hour, uint32_t Minute,  uint32_t Second) 
+{
+    uint32_t tr = 0;
+
+    tr |= Format12_24;                                   /* handles PM bit */
+
+    tr |= ((Hour / 10U)    & 0x3U) << RTC_POSITION_TR_HT;
+    tr |= ((Hour % 10U)    & 0xFU) << RTC_POSITION_TR_HU;
+
+    tr |= ((Minute / 10U)  & 0x7U) << RTC_POSITION_TR_MT;
+    tr |= ((Minute % 10U)  & 0xFU) << RTC_POSITION_TR_MU;
+
+    tr |= ((Second / 10U)  & 0x7U) << RTC_POSITION_TR_ST;
+    tr |= ((Second % 10U)  & 0xFU) << RTC_POSITION_TR_SU;
+
+    RTC->TR = tr;
 }
 
 void RTC_Clock_Init(void) {
@@ -147,48 +175,54 @@ void RTC_Clock_Init(void) {
 }
 
 void RTC_Disable_Write_Protection(void) {
-	// [TODO]
-}
-	
-void RTC_Enable_Write_Protection(void) {
-	// [TODO]
+    RTC->WPR = 0xCA;
+    RTC->WPR = 0x53;
 }
 
-uint32_t RTC_TIME_GetHour(void) {
-	// [TODO]
-	return 0;
+void RTC_Enable_Write_Protection(void) {
+    RTC->WPR = 0xFF;
+}
+
+/* ---------- compact helpers to build BCD values ---------- */
+static uint32_t bcd_from_tr(uint32_t value, uint32_t mask, uint32_t pos_t, uint32_t mask_u, uint32_t pos_u) {
+    uint32_t tens  = (value & mask)   >> pos_t;
+    uint32_t units = (value & mask_u) >> pos_u;
+    return (tens << 4) | units;               /* packed BCD */
+}
+
+uint32_t RTC_TIME_GetHour(void)   {
+    uint32_t tr = RTC->TR;
+    return bcd_from_tr(tr, RTC_TR_HT, RTC_POSITION_TR_HT,RTC_TR_HU, RTC_POSITION_TR_HU);
 }
 
 uint32_t RTC_TIME_GetMinute(void) {
-	// [TODO]
-	return 0;
+    uint32_t tr = RTC->TR;
+    return bcd_from_tr(tr, RTC_TR_MNT, RTC_POSITION_TR_MT, RTC_TR_MNU, RTC_POSITION_TR_MU);
 }
 
 uint32_t RTC_TIME_GetSecond(void) {
-	// [TODO]
-	return 0;
+    uint32_t tr = RTC->TR;
+    return bcd_from_tr(tr, RTC_TR_ST, RTC_POSITION_TR_ST, RTC_TR_SU, RTC_POSITION_TR_SU);
 }
 
 uint32_t RTC_DATE_GetMonth(void) {
-	// [TODO]
-	return 0;
+    uint32_t dr = RTC->DR;
+    return bcd_from_tr(dr, RTC_DR_MT, RTC_POSITION_DR_MT, RTC_DR_MU, RTC_POSITION_DR_MU);
 }
 
-uint32_t RTC_DATE_GetDay(void) {
-	// [TODO]
-	return 0;
+uint32_t RTC_DATE_GetDay(void)   {
+    uint32_t dr = RTC->DR;
+    return bcd_from_tr(dr, RTC_DR_DT, RTC_POSITION_DR_DT, RTC_DR_DU, RTC_POSITION_DR_DU);
 }
 
-uint32_t RTC_DATE_GetYear(void) {
-	// [TODO]
-	return 0;
+uint32_t RTC_DATE_GetYear(void)  {
+    uint32_t dr = RTC->DR;
+    return bcd_from_tr(dr, RTC_DR_YT, RTC_POSITION_DR_YT, RTC_DR_YU, RTC_POSITION_DR_YU);
 }
 
 uint32_t RTC_DATE_GetWeekDay(void) {
-	// [TODO]
-	return 0;
+    return (RTC->DR >> RTC_POSITION_DR_WDU) & 0x7U;
 }
-
 void Get_RTC_Calendar(char * strTime, char * strDate) {
 	/* Note: need to convert in decimal value in using __LL_RTC_CONVERT_BCD2BIN helper macro */
 	/* Display time Format : hh:mm:ss */

@@ -19,11 +19,11 @@
 	 RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
  
 	 /* 2. Configure PA5 as general‑purpose output, push‑pull, low speed, no pull‑up/down */
-	 GREEN_LED_PORT->MODER   &= ~(GPIO_MODER_MODE5_Msk);          // clear bits
+	 GREEN_LED_PORT->MODER   &= ~(GPIO_MODER_MODE5);          // clear bits
 	 GREEN_LED_PORT->MODER   |=  (1u << (GREEN_LED_PIN * 2u));    // 01 = output
 	 GREEN_LED_PORT->OTYPER  &= ~GREEN_LED_MASK;                  // 0 = push‑pull
-	 GREEN_LED_PORT->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED5_Msk);      // 00 = low speed
-	 GREEN_LED_PORT->PUPDR   &= ~(GPIO_PUPDR_PUPD5_Msk);          // 00 = no pull
+	 GREEN_LED_PORT->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED5);      // 00 = low speed
+	 GREEN_LED_PORT->PUPDR   &= ~(GPIO_PUPDR_PUPD5);          // 00 = no pull
  
 	 Green_LED_Off();                                             // start with LED OFF
  }
