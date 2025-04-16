@@ -1,47 +1,48 @@
 /*
- * ECE 153B ‑‑ Lab 2B  (Part B – Interrupts)
+ * ECE 153B
  *
  * Name(s):
  * Section:
+ * Lab: 2B
  */
 
- #include "stm32l476xx.h"
- #include "LED.h"
- 
- /* ------------- Private helpers ------------- */
- #define GREEN_LED_PORT      GPIOA          // PA5 on Nucleo‑L476
- #define GREEN_LED_PIN       5u
- #define GREEN_LED_MASK      (1u << GREEN_LED_PIN)
- 
- void LED_Init(void)
- {
-	 /* 1. Enable GPIOA clock (AHB2 domain) */
-	 RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
- 
-	 /* 2. Configure PA5 as general‑purpose output, push‑pull, low speed, no pull‑up/down */
-	 GREEN_LED_PORT->MODER   &= ~(GPIO_MODER_MODE5);          // clear bits
-	 GREEN_LED_PORT->MODER   |=  (1u << (GREEN_LED_PIN * 2u));    // 01 = output
-	 GREEN_LED_PORT->OTYPER  &= ~GREEN_LED_MASK;                  // 0 = push‑pull
-	 GREEN_LED_PORT->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED5);      // 00 = low speed
-	 GREEN_LED_PORT->PUPDR   &= ~(GPIO_PUPDR_PUPD5);          // 00 = no pull
- 
-	 Green_LED_Off();                                             // start with LED OFF
- }
- 
- void Green_LED_On(void)
- {
-	 /* Use BSRR for atomic set */
-	 GREEN_LED_PORT->BSRR =  GREEN_LED_MASK;
- }
- 
- void Green_LED_Off(void)
- {
-	 /* Upper 16 bits of BSRR reset the pin */
-	 GREEN_LED_PORT->BSRR = (GREEN_LED_MASK << 16);
- }
- 
- void Green_LED_Toggle(void)
- {
-	 GREEN_LED_PORT->ODR ^= GREEN_LED_MASK;
- }
- 
+#include "LED.h"
+
+void LED_Init(void) {
+	// Enable GPIO Clocks
+	// [TODO]
+	//Enables Clock for PORT A and C
+		RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN; 
+		RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
+	
+	// Initialize Green LED
+	// [TODO]
+	GPIOA->MODER &= ~GPIO_MODER_MODE5; //Clear LED GPIO pin
+	GPIOA->MODER |= GPIO_MODER_MODE5_0; // Set LED to output 3.3v
+	GPIOA->OTYPER &= ~GPIO_OTYPER_OT5; // Push-pull mode
+	GPIOA->PUPDR &= ~GPIO_PUPDR_PUPD5; // No Pull up/pull down
+}
+
+void Green_LED_Off(void) {
+	// [TODO]
+	GPIOA->ODR |= ~GPIO_ODR_OD5;
+	
+}
+
+void Green_LED_On(void) {
+	// [TODO]
+	GPIOA->ODR |= GPIO_ODR_OD5;
+}
+
+void Green_LED_Toggle(void) {
+	// [TODO]
+	 if (GPIOC->IDR & GPIO_IDR_ID13) {
+            // Toggle PA5 by XOR'ing its bit in ODR
+            GPIOA->ODR ^= GPIO_ODR_OD5;  
+            
+            // Wait until the button is released, so we only toggle once
+            while (GPIOC->IDR & GPIO_IDR_ID13) {
+                // do nothing
+            }
+        }
+}

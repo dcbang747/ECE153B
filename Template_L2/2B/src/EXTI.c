@@ -1,61 +1,52 @@
 /*
- * ECE 153B ‑‑ Lab 2B  (Part B – Interrupts)
+ * ECE 153B
  *
  * Name(s):
  * Section:
+ * Lab: 2B
  */
 
- #include "stm32l476xx.h"
- #include "EXTI.h"
- #include "LED.h"
- 
- /* ------------- Private helpers ------------- */
- #define USER_BTN_PORT       GPIOC      // PC13 on Nucleo‑L476
- #define USER_BTN_PIN        13u
- #define USER_BTN_MASK       (1u << USER_BTN_PIN)
- 
- void EXTI_Init(void)
- {
-	 /* 1. Enable GPIOC + SYSCFG clocks */
-	 RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;      // GPIOC clock
-	 RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;     // SYSCFG clock
- 
-	 /* 2. Configure PC13 as input with pull‑up (button is active‑low) */
-	 USER_BTN_PORT->MODER  &= ~(GPIO_MODER_MODE13);          // 00 = input
-	 USER_BTN_PORT->PUPDR  &= ~(GPIO_PUPDR_PUPD13);
-	 USER_BTN_PORT->PUPDR  |=  (1u << (USER_BTN_PIN * 2u));      // 01 = pull‑up
- 
-	 /* 3. Map PC13 → EXTI13 in SYSCFG_EXTICR4 */
-	 SYSCFG->EXTICR[3] &= ~(SYSCFG_EXTICR4_EXTI13);          // clear
-	 SYSCFG->EXTICR[3] |=  (2u << SYSCFG_EXTICR4_EXTI13_);    // 0b0010 = Port C
- 
-	 /* 4. Configure EXTI trigger: falling edge only (button press) */
-	 EXTI->RTSR1 &= ~USER_BTN_MASK;          // disable rising
-	 EXTI->FTSR1 |=  USER_BTN_MASK;          // enable falling
- 
-	 /* 5. Un‑mask EXTI13 */
-	 EXTI->IMR1  |=  USER_BTN_MASK;
- 
-	 /* 6. Clear any pending flag */
-	 EXTI->PR1   =   USER_BTN_MASK;
- 
-	 /* 7. Enable NVIC line and set top priority (0 is highest) */
-	 NVIC_SetPriority(EXTI15_10_IRQn, 0);
-	 NVIC_EnableIRQ  (EXTI15_10_IRQn);
- }
- 
- /* --------------------------------------------------------- */
- /*                    Interrupt handler                      */
- /* --------------------------------------------------------- */
- void EXTI15_10_IRQHandler(void)
- {
-	 if (EXTI->PR1 & USER_BTN_MASK)          // was it EXTI13?
-	 {
-		 EXTI->PR1 = USER_BTN_MASK;          // 1 → clear pending
- 
-		 /* Every press toggles;  odd press  → LED ON
-								   even press → LED OFF    */
-		 Green_LED_Toggle();
-	 }
- }
- 
+#include "EXTI.h"
+#include "LED.h"
+
+void EXTI_Init(void) {
+	// Initialize User Button
+	// [TODO]
+		GPIOC -> MODER &= ~GPIO_MODER_MODE13;
+		GPIOC -> PUPDR &= ~GPIO_PUPDR_PUPD13;
+		GPIOA -> ODR |= GPIO_ODR_OD5;
+	
+	// Configure SYSCFG EXTI
+	// [TODO]
+		SYSCFG->EXTICR[3] &= ~SYSCFG_EXTICR4_EXTI13;
+		SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI13_PC;
+		RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+
+	
+	// Configure EXTI Trigger
+	// [TODO]
+		EXTI->RTSR1 |= EXTI_RTSR1_RT0;
+		EXTI->FTSR1 |= EXTI_FTSR1_FT1;
+	
+	// Enable EXTI
+	// [TODO]
+		EXTI->IMR1 |= EXTI_IMR1_IM1;
+	
+	// Configure and Enable in NVIC
+	// [TODO]
+		NVIC_EnableIRQ(EXTI4_IRQn);
+		NVIC_SetPriority(EXTI4_IRQn, 0);
+}
+
+// [TODO] Write Interrupt Handlers (look in startup_stm32l476xx.s to find the 
+// interrupt handler names that you should use)
+void EXTI4_IRQHandler(void){
+	// Clear interrupt pending bit
+	EXTI->PR1 |= EXTI_PR1_PIF13;
+	
+	// Define behavior that occurs when interrupt occurs
+	if((EXTI->PR1 & EXTI_PR1_PIF3) != 0){
+		Green_LED_Toggle();
+	}
+}
+
