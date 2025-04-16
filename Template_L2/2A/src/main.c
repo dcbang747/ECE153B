@@ -7,11 +7,11 @@
  */
 #include "stm32l4xx.h"  // or the appropriate device header
 
-#define DELAY      60000          // Adjust for your desired step speed
+#define DELAY      1000          // Adjust for your desired step speed
 #define PIN_A      (5)            // PC5
-#define PIN_Bp     (6)            // PC6
-#define PIN_Ap     (8)            // PC8
-#define PIN_B      (9)            // PC9
+#define PIN_Bp     (9)            // PC9
+#define PIN_Ap     (6)            // PC6
+#define PIN_B      (8)            // PC8
 
 // Simple blocking delay
 static inline void Delay(void) {
@@ -134,6 +134,14 @@ void GPIO_Init(void){
 	
 		// Pause
 		for (volatile int i = 0; i < 500000; i++);
+		
+		Full_Stepping_CounterClockwise();
+
+		for (volatile int i = 0; i < 500000; i++);
+		
+		Half_Stepping_Clockwise();
+		
+		for (volatile int i = 0; i < 500000; i++);		
 	
 		// Then do one full revolution counterclockwise using half-stepping
 		Half_Stepping_CounterClockwise();
