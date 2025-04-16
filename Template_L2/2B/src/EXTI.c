@@ -21,13 +21,13 @@
 	 RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;     // SYSCFG clock
  
 	 /* 2. Configure PC13 as input with pull‑up (button is active‑low) */
-	 USER_BTN_PORT->MODER  &= ~(GPIO_MODER_MODE13_Msk);          // 00 = input
-	 USER_BTN_PORT->PUPDR  &= ~(GPIO_PUPDR_PUPD13_Msk);
+	 USER_BTN_PORT->MODER  &= ~(GPIO_MODER_MODE13);          // 00 = input
+	 USER_BTN_PORT->PUPDR  &= ~(GPIO_PUPDR_PUPD13);
 	 USER_BTN_PORT->PUPDR  |=  (1u << (USER_BTN_PIN * 2u));      // 01 = pull‑up
  
 	 /* 3. Map PC13 → EXTI13 in SYSCFG_EXTICR4 */
-	 SYSCFG->EXTICR[3] &= ~(SYSCFG_EXTICR4_EXTI13_Msk);          // clear
-	 SYSCFG->EXTICR[3] |=  (2u << SYSCFG_EXTICR4_EXTI13_Pos);    // 0b0010 = Port C
+	 SYSCFG->EXTICR[3] &= ~(SYSCFG_EXTICR4_EXTI13);          // clear
+	 SYSCFG->EXTICR[3] |=  (2u << SYSCFG_EXTICR4_EXTI13_);    // 0b0010 = Port C
  
 	 /* 4. Configure EXTI trigger: falling edge only (button press) */
 	 EXTI->RTSR1 &= ~USER_BTN_MASK;          // disable rising
