@@ -18,35 +18,35 @@ void EXTI_Init(void) {
 	
 	// Configure SYSCFG EXTI
 	// [TODO]
-		SYSCFG->EXTICR[3] &= ~SYSCFG_EXTICR4_EXTI13;
-		SYSCFG->EXTICR[3] |= SYSCFG_EXTICR4_EXTI13_PC;
-		RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+		RCC->AHB2ENR  |= RCC_AHB2ENR_GPIOCEN;     // PC13 clock
+		RCC->APB2ENR  |= RCC_APB2ENR_SYSCFGEN;    // SYSCFG clock
+		SYSCFG->EXTICR[3] &= ~(0xF << 4);         // clear EXTI13[7:4]
+		SYSCFG->EXTICR[3] |=  (2   << 4);         // 0b0010 = port C
 
 	
 	// Configure EXTI Trigger
 	// [TODO]
-		EXTI->RTSR1 |= EXTI_RTSR1_RT0;
-		EXTI->FTSR1 |= EXTI_FTSR1_FT1;
+	    EXTI->RTSR1 &= ~EXTI_RTSR1_RT13;          // disable rising edge
+    	EXTI->FTSR1 |=  EXTI_FTSR1_FT13;          // enable falling edge
 	
 	// Enable EXTI
 	// [TODO]
-		EXTI->IMR1 |= EXTI_IMR1_IM1;
+    	EXTI->IMR1  |=  EXTI_IMR1_IM13;           // un‑mask EXTI13
 	
 	// Configure and Enable in NVIC
 	// [TODO]
-		NVIC_EnableIRQ(EXTI4_IRQn);
-		NVIC_SetPriority(EXTI4_IRQn, 0);
+		NVIC_SetPriority(EXTI15_10_IRQn, 0);
+		NVIC_EnableIRQ  (EXTI15_10_IRQn);
 }
 
 // [TODO] Write Interrupt Handlers (look in startup_stm32l476xx.s to find the 
 // interrupt handler names that you should use)
-void EXTI4_IRQHandler(void){
-	// Clear interrupt pending bit
-	EXTI->PR1 |= EXTI_PR1_PIF13;
-	
-	// Define behavior that occurs when interrupt occurs
-	if((EXTI->PR1 & EXTI_PR1_PIF3) != 0){
-		Green_LED_Toggle();
-	}
+void EXTI15_10_IRQHandler(void)
+{
+    if (EXTI->PR1 & EXTI_PR1_PIF13)           
+    {
+        EXTI->PR1 = EXTI_PR1_PIF13;           
+        Green_LED_Toggle();                   
+    }
 }
 

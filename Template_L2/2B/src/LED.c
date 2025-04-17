@@ -25,7 +25,7 @@ void LED_Init(void) {
 
 void Green_LED_Off(void) {
 	// [TODO]
-	GPIOA->ODR |= ~GPIO_ODR_OD5;
+	GPIOA->ODR &= ~GPIO_ODR_OD5;
 	
 }
 
@@ -36,13 +36,5 @@ void Green_LED_On(void) {
 
 void Green_LED_Toggle(void) {
 	// [TODO]
-	 if (GPIOC->IDR & GPIO_IDR_ID13) {
-            // Toggle PA5 by XOR'ing its bit in ODR
-            GPIOA->ODR ^= GPIO_ODR_OD5;  
-            
-            // Wait until the button is released, so we only toggle once
-            while (GPIOC->IDR & GPIO_IDR_ID13) {
-                // do nothing
-            }
-        }
+	GPIOA->ODR ^= GPIO_ODR_OD5;
 }
