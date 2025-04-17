@@ -94,16 +94,18 @@ void RTC_Alarm_IRQHandler(void)
 }
 
 
-int main(void) {	
-	System_Clock_Init(); // Switch System Clock = 80 MHz
-	
-	LED_Init();
-	
-	RTC_Init();
-	RTC_Alarm_Enable();
-	RTC_Set_Alarm();
-	
-	while(1) {
-		// [TODO]
-	}
+/* ------------ main loop ------------------------------------------------------- */
+int main(void)
+{
+    System_Clock_Init();          /* 80 MHz core clock                   */
+    LED_Init();                   /* configure PA5                       */
+    RTC_Init();                   /* start the calendar                  */
+
+    RTC_Alarm_Enable();           /* hook EXTI line 18                   */
+    RTC_Set_Alarm();              /* program alarms A & B                */
+
+    while (1) {
+        Get_RTC_Calendar(strTime, strDate);  /* keep these fresh for watch‑window */
+        __WFI();                             /* sleep until any interrupt occurs */
+    }
 }
