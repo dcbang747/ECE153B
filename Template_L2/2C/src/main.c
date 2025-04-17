@@ -6,104 +6,90 @@
  * Lab: 2C
  */
  
- #include "stm32l476xx.h"
+#include "stm32l476xx.h"
 
- #include "LED.h"
- #include "RTC.h"
- #include "SysClock.h"
- 
- char strTime[12] = {0};
- char strDate[12] = {0};
- 
- /* ------------------------------------------------
-  *  Replace the three TODO sections in Main.c
-  * ------------------------------------------------*/
- 
-  void RTC_Set_Alarm(void) {
-     /*——— disable write‑protection ———*/
-     RTC_Disable_Write_Protection();
- 
-     /* 1. Disable both alarms while we program them */
-     RTC->CR &= ~(RTC_CR_ALRAE | RTC_CR_ALRBE);
-     /*    wait until the hardware says registers are writable             */
-     while ((RTC->ISR & (RTC_ISR_ALRAWF | RTC_ISR_ALRBWF))
-            != (RTC_ISR_ALRAWF | RTC_ISR_ALRBWF));
- 
-     /* ------------------------------------------------
-      * Alarm A – triggers when seconds == 30
-      *   (all other fields “don’t‑care”)
-      * ------------------------------------------------*/
-     uint32_t alrmar = 0;
-     alrmar |= 3U << RTC_POSITION_TR_ST;           /* seconds tens = 3 (30 s) */
-     /* seconds units = 0 – bit positions are already 0 */
-     alrmar |= RTC_ALRMAR_MSK2 | RTC_ALRMAR_MSK3 | RTC_ALRMAR_MSK4;
-     RTC->ALRMAR = alrmar;
- 
-     /* ------------------------------------------------
-      * Alarm B – triggers every second
-      *   (mask *all* fields)
-      * ------------------------------------------------*/
-     RTC->ALRMBR = RTC_ALRMBR_MSK1 | RTC_ALRMBR_MSK2 |
-                   RTC_ALRMBR_MSK3 | RTC_ALRMBR_MSK4;
- 
-     /* 2. Enable interrupts for both alarms, then the alarms themselves */
-     RTC->CR |=  RTC_CR_ALRAIE | RTC_CR_ALRBIE;    /* interrupt enable   */
-     RTC->CR |=  RTC_CR_ALRAE  | RTC_CR_ALRBE;     /* alarm enable       */
- 
-     /*——— restore write‑protection ———*/
-     RTC_Enable_Write_Protection();
- }
- 
- void RTC_Alarm_Enable(void) {
-     /* EXTI line 18 routes RTC alarm events to the NVIC */
- 
-     /* 1 | IMR: unmask  2 | EMR: create an event  3 | RTSR: rising edge */
-     EXTI->IMR1  |= (1U << 18);
-     EXTI->EMR1  |= (1U << 18);
-     EXTI->RTSR1 |= (1U << 18);
-     EXTI->FTSR1 &= ~(1U << 18);   /* rising only */
- 
-     /* 4 | clear any stale pending flag */
-     EXTI->PR1 = (1U << 18);
- 
-     /* 5 | NVIC setup */
-     NVIC_SetPriority(RTC_Alarm_IRQn, 0);
-     NVIC_EnableIRQ  (RTC_Alarm_IRQn);
- }
- 
- void RTC_Alarm_IRQHandler(void) {
-     /* —— clear flags, then toggle LED —— */
-     RTC_Disable_Write_Protection();
- 
-     uint32_t isr = RTC->ISR;
- 
-     if (isr & RTC_ISR_ALRAF) {          /* Alarm A fired */
-         RTC->ISR &= ~RTC_ISR_ALRAF;     /* clear flag  */
-         Green_LED_Toggle();
-     }
-     if (isr & RTC_ISR_ALRBF) {          /* Alarm B fired */
-         RTC->ISR &= ~RTC_ISR_ALRBF;     /* clear flag  */
-         Green_LED_Toggle();
-     }
- 
-     RTC_Enable_Write_Protection();
- 
-     /* clear EXTI pending bit */
-     EXTI->PR1 = (1U << 18);
- }
- 
- int main(void) {
-     System_Clock_Init();               /* 80 MHz core  */
-     LED_Init();
- 
-     RTC_Init();
-     RTC_Alarm_Enable();
-     RTC_Set_Alarm();
- 
-     while (1) {
-         /* update the watch‑window strings once per loop */
-         Get_RTC_Calendar(strTime, strDate);
-         __WFI();                       /* nap until an interrupt */
-     }
- }
- 
+#include "LED.h"
+#include "RTC.h"
+#include "SysClock.h"
+
+char strTime[12] = {0};
+char strDate[12] = {0};
+
+/* ------------ EXTI line 18 (RTC Alarm) enable --------------------------------- */
+void RTC_Alarm_Enable(void)
+{
+    EXTI->IMR1  |= (1u << 18);      /* un‑mask interrupt           */
+    EXTI->EMR1  |= (1u << 18);      /* enable event (optional)     */
+    EXTI->RTSR1 |= (1u << 18);      /* rising‑edge trigger         */
+    EXTI->FTSR1 &= ~(1u << 18);     /* falling edge disabled       */
+    EXTI->PR1    = (1u << 18);      /* clear any pending flag      */
+
+    NVIC_SetPriority(RTC_Alarm_IRQn, 0);
+    NVIC_EnableIRQ  (RTC_Alarm_IRQn);
+}
+
+
+/* ------------ program Alarm A (every 30 s) and Alarm B (every second) ---------- */
+void RTC_Set_Alarm(void)
+{
+    RTC_Disable_Write_Protection();
+
+    /* 1. disable both alarms and wait until they are writable */
+    RTC->CR  &= ~(RTC_CR_ALRAE | RTC_CR_ALRBE);
+    while (!(RTC->ISR & RTC_ISR_ALRAWF));
+    while (!(RTC->ISR & RTC_ISR_ALRBWF));
+
+    /*  Alarm A : trigger at ss = 30  -------------------------------------- */
+    uint32_t alrmar = 0;
+    alrmar |= RTC_ALRMAR_MSK4 | RTC_ALRMAR_MSK3 | RTC_ALRMAR_MSK2;   /* mask date/hr/min */
+
+    uint8_t secs = 0x30;                    /* 30 s in BCD                       */
+    alrmar |= (((secs >> 4) & 0x07) << 4) | /* ST bits are 6:4  → shift 4 places */
+            (( secs       & 0x0F) << 0);  /* SU bits are 3:0  → shift 0 places */
+
+    RTC->ALRMAR = alrmar;
+
+    /* 3. -------- Alarm B : fire every second -------------------------- */
+    RTC->ALRMBR = RTC_ALRMBR_MSK4 | RTC_ALRMBR_MSK3 |
+                  RTC_ALRMBR_MSK2 | RTC_ALRMBR_MSK1;                 /* all “don’t care”   */
+
+    /* 4. enable interrupts and the two alarms */
+    RTC->CR |= RTC_CR_ALRAIE | RTC_CR_ALRBIE |
+               RTC_CR_ALRAE  | RTC_CR_ALRBE;
+
+    RTC_Enable_Write_Protection();
+}
+
+
+/* ------------ ISR : toggle the green LED whenever a chosen alarm fires -------- */
+void RTC_Alarm_IRQHandler(void)
+{
+    if (RTC->ISR & RTC_ISR_ALRAF) {          /* Alarm A? */
+        RTC->ISR &= ~RTC_ISR_ALRAF;          /* clear flag                */
+        EXTI->PR1  = (1u << 18);             /* clear EXTI line 18        */
+        Green_LED_Toggle();
+    }
+    if (RTC->ISR & RTC_ISR_ALRBF) {          /* Alarm B? */
+        RTC->ISR &= ~RTC_ISR_ALRBF;
+        EXTI->PR1  = (1u << 18);
+        Green_LED_Toggle();
+    }
+}
+
+
+/* ------------ main loop ------------------------------------------------------- */
+int main(void)
+{
+    System_Clock_Init();          /* 80 MHz core clock                   */
+    LED_Init();                   /* configure PA5                       */
+    RTC_Init();                   /* start the calendar                  */
+
+    RTC_Alarm_Enable();           /* hook EXTI line 18                   */
+    RTC_Set_Alarm();              /* program alarms A & B                */
+
+    while (1) {
+        Get_RTC_Calendar(strTime, strDate);  /* keep these fresh for watch‑window */
+        __WFI();                             /* sleep until any interrupt occurs */
+    }
+}
+
