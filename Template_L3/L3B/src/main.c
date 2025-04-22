@@ -49,8 +49,8 @@
 	 TIM2->ARR = 999;          /* 1000ticks --> 1kHz PWM period   */
  
 	 /* 3. PWM mode-1 on OC1 with preload */
-	 TIM2->CCMR1 &= ~TIM_CCMR1_OC1M_Msk;
-	 TIM2->CCMR1 |=  (6 << TIM_CCMR1_OC1M_Pos); /* 110: PWM1          */
+	 TIM2->CCMR1 &= ~(7U << 4);
+	 TIM2->CCMR1 |=  (6U << 4);
 	 TIM2->CCMR1 |=  TIM_CCMR1_OC1PE;           /* preload enable     */
  
 	 /* 4. Output active-high & enable */
@@ -101,8 +101,8 @@
 	 TIM5->ARR = 999;          /* 1000ticks @50kHz --> 20ms      */
  
 	 /* 3. PWM mode-1 on OC1 with preload */
-	 TIM5->CCMR1 &= ~TIM_CCMR1_OC1M_Msk;
-	 TIM5->CCMR1 |=  (6 << TIM_CCMR1_OC1M_Pos);
+	 TIM5->CCMR1 &= ~(7U << 4);
+	 TIM5->CCMR1 |=  (6U << 4);
 	 TIM5->CCMR1 |=  TIM_CCMR1_OC1PE;
  
 	 /* 4. Output active-high & enable */
