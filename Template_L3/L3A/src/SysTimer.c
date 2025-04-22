@@ -3,47 +3,45 @@
  *
  * Name(s):
  * Section:
- * Lab: 2B
+ * Lab: 3A
  */
 
-#include "SysTimer.h"
-
-uint32_t volatile msTicks;
-
-void SysTick_Init(void) {
-	// SysTick Control & Status Register
-	SysTick->CTRL = 0; // Disable SysTick IRQ and SysTick Counter
-	
-	// SysTick Reload Value Register
-	SysTick->LOAD = 100000; // [TODO] - Enter the correct LOAD value that will give us a 1 ms period
-	
-	// SysTick Current Value Register
-	SysTick->VAL = 0;
-	
-	// Configure and Enable SysTick interrupt in NVIC
-	NVIC_EnableIRQ(SysTick_IRQn);
-	NVIC_SetPriority(SysTick_IRQn, 1); // Set Priority to 1
-	
-	// Enables SysTick exception request
-	// 1 = counting down to zero asserts the SysTick exception request
-	// 0 = counting down to zero does not assert the SysTick exception request
-	SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;
-	
-	// Select clock source
-	// If CLKSOURCE = 0, the external clock is used. The frequency of SysTick clock is the frequency of the AHB clock divided by 8.
-	// If CLKSOURCE = 1, the processor clock is used.
-	SysTick->CTRL &= ~SysTick_CTRL_CLKSOURCE_Msk;		
-	
-	// Enable SysTick IRQ and SysTick Timer
-	SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;  
-}
-
-void SysTick_Handler(void) {
-	++msTicks;
-}
-
-void delay(uint32_t T) {
-	uint32_t currentTicks; // Hint: It may be helpful to keep track of what the current tick count is
-	
-	// [TODO] - Implement function that waits until a time specified by argument T
-}
+ #include "SysTimer.h"
+ #include "stm32l476xx.h"
+ 
+ uint32_t volatile msTicks;
+ 
+ void SysTick_Init(void) {
+	 /* Disable SysTick during configuration */
+	 SysTick->CTRL = 0;
+ 
+	 /* ------------------------------------------------------------
+	  * System clock (SYSCLK)   = 8 MHz (MSI range 7)
+	  * CLKSOURCE bit     = 0   -> SysTick clock = HCLK/8 = 1 MHz
+	  * Desired period          = 1ms -> 1,000,000,Hz / 1000 = 1000 counts
+	  * RELOAD value            = counts - 1 = 999
+	  * ---------------------------------------------------------- */
+	 SysTick->LOAD = 999;                                /* 1ms period */
+ 
+	 SysTick->VAL  = 0;                                  /* clear current count */
+ 
+	 NVIC_EnableIRQ   (SysTick_IRQn);                    /* enable interrupt  */
+	 NVIC_SetPriority (SysTick_IRQn, 1);
+ 
+	 SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;          /* enable IRQ       */
+	 SysTick->CTRL &= ~SysTick_CTRL_CLKSOURCE_Msk;       /* use HCLK/8 clock */
+	 SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;           /* start SysTick    */
+ }
+ 
+ void SysTick_Handler(void) {
+	 ++msTicks;                                          /* 1ms tick */
+ }
+ 
+ void delay(uint32_t T) {
+	 /* Busy-wait until T milliseconds have elapsed */
+	 uint32_t start = msTicks;
+	 while ((msTicks - start) < T) {
+		 /* just wait */
+	 }
+ }
+ 

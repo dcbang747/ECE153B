@@ -3,7 +3,7 @@
  *
  * Name(s):
  * Section:
- * Lab: 2B
+ * Lab: 3A
  */
 
 #include "LED.h"

@@ -6,35 +6,42 @@
  * Lab: 3A
  */
 
-#include "stm32l476xx.h"
-#include "LED.h"
-#include "SysTimer.h"
-
-void System_Clock_Init(void) {
-	// Select MSI as system clock source
-	RCC->CFGR |= 0; // [TODO] - Replace with value that will make MSI the system clock source
-	
-	// Set MSI clock range
-	RCC->CR &= ~RCC_CR_MSIRANGE;
-	RCC->CR |= 0; // [TODO] - Replace with value that will make range 8 MHz
-	
-	// Use the MSI clock range that is defined in RCC_CR
-	RCC->CR |= 0; // [TODO] - Replace with value that will select range in RCC->CR
-	
-	// Enable MSI oscillator
-	RCC->CR |= 0; // [TODO] - Replace with value that will enable MSI
-	
-	// Wait until MSI is ready
-	while((RCC->CR & 0 /* [TODO] - Replace with value that checks whether MSI is ready */) == 0);
-}
-
-int main() {
-	// Initialization 
-	System_Clock_Init();
-	SysTick_Init();
-	LED_Init();
-	
-	while(1) {
-		// [TODO] Write Simple Program here...
-	}
-}
+ #include "stm32l476xx.h"
+ #include "LED.h"
+ #include "SysTimer.h"
+ 
+ void System_Clock_Init(void) {
+	 /* 1. Make sure we switch back to MSI (SW = 00) */
+	 RCC->CFGR &= ~RCC_CFGR_SW;                 /* MSI selected as SYSCLK */
+ 
+	 /* 2. Use MSIRANGE bits in RCC_CR (set MSIRGSEL) */
+	 RCC->CR |= RCC_CR_MSIRGSEL;
+ 
+	 /* 3. Select 8MHz range (MSIRANGE = 0b0111) */
+	 RCC->CR &= ~RCC_CR_MSIRANGE;               /* clear range */
+	 RCC->CR |=  (7U << RCC_CR_MSIRANGE_Pos);   /* range 7 -> 8MHz */
+ 
+	 /* 4. Enable MSI oscillator */
+	 RCC->CR |= RCC_CR_MSION;
+ 
+	 /* 5. Wait until MSI is ready */
+	 while ((RCC->CR & RCC_CR_MSIRDY) == 0);
+ }
+ 
+ int main(void) {
+	 /*------------------------------------------------------------------*/
+	 /*  Initialise periphery                                            */
+	 /*------------------------------------------------------------------*/
+	 System_Clock_Init();   /* 8MHz MSI */
+	 SysTick_Init();        /* 1ms ticks */
+	 LED_Init();            /* PA5 green LED */
+ 
+	 /*------------------------------------------------------------------*/
+	 /*  Main loop : toggle LED every second                             */
+	 /*------------------------------------------------------------------*/
+	 while (1) {
+		 Green_LED_Toggle();
+		 delay(1000);       /* wait 1000ms = 1s */
+	 }
+ }
+ 
