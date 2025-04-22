@@ -28,9 +28,9 @@
 	 NVIC_EnableIRQ   (SysTick_IRQn);                    /* enable interrupt  */
 	 NVIC_SetPriority (SysTick_IRQn, 1);
  
-	 SysTick->CTRL |= SysTick_CTRL_TICKINT_Msk;          /* enable IRQ       */
-	 SysTick->CTRL &= ~SysTick_CTRL_CLKSOURCE_Msk;       /* use HCLK/8 clock */
-	 SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;           /* start SysTick    */
+	 SysTick->CTRL |=  (1UL << 1);          /* enable IRQ       */
+	 SysTick->CTRL &= ~(1UL << 2);      /* use HCLK/8 clock */
+	 SysTick->CTRL |=  (1UL << 0);         /* start SysTick    */
  }
  
  void SysTick_Handler(void) {

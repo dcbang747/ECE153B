@@ -17,9 +17,9 @@
 	 /* 2. Use MSIRANGE bits in RCC_CR (set MSIRGSEL) */
 	 RCC->CR |= RCC_CR_MSIRGSEL;
  
-	 /* 3. Select 8MHz range (MSIRANGE = 0b0111) */
+	 /* 3. Select 8MHz range (MSIRANGE = 0b0111) */ 
 	 RCC->CR &= ~RCC_CR_MSIRANGE;               /* clear range */
-	 RCC->CR |=  (7U << RCC_CR_MSIRANGE_Pos);   /* range 7 -> 8MHz */
+	 RCC->CR |=  RCC_CR_MSIRANGE_7;   /* range 7 -> 8MHz */
  
 	 /* 4. Enable MSI oscillator */
 	 RCC->CR |= RCC_CR_MSION;
