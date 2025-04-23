@@ -47,6 +47,8 @@ void Input_Capture_Setup() {
 
 	NVIC_SetPriority(TIM4_IRQn, 2);
 	NVIC_EnableIRQ(TIM4_IRQn);
+	
+	currentValue = CR1
 
 
 }
@@ -55,6 +57,9 @@ void TIM4_IRQHandler(void) {
 	// [TODO]
 	EXTI->RTSR1 |= EXTI_RTSR1_RT9;
 	EXTI->FTSR1 |= EXTI_FTSR1_FT6;
+	
+	
+	
 }
 
 void Trigger_Setup() {
