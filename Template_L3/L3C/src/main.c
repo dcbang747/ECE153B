@@ -22,7 +22,7 @@ void Input_Capture_Setup() {
 	GPIOB->MODER &= ~GPIO_MODER_MODE6; 	//PB6
 	GPIOB->MODER |= GPIO_MODER_MODE6_1; //AF Mode
 	GPIOB->AFR[0] &=	~GPIO_AFRL_AFSEL6; 	// TIM4_CH1, AF2
-	GPIOB->AFR[0] |= GPIO_AFRL_AFSEL6_1
+	GPIOB->AFR[0] |= GPIO_AFRL_AFSEL6_1;
 	
 	RCC->APB1ENR1 |= RCC_APB1ENR1_TIM4EN;		//Enable timer
 	
@@ -53,6 +53,8 @@ void Input_Capture_Setup() {
 
 void TIM4_IRQHandler(void) {
 	// [TODO]
+	EXTI->RTSR1 |= EXTI_RTSR1_RT9;
+	EXTI->FTSR1 |= EXTI_FTSR1_FT6;
 }
 
 void Trigger_Setup() {

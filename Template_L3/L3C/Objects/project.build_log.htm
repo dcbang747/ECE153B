@@ -1,0 +1,125 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: µVision V5.39.0.0
+Copyright (C) 2023 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: Pablo Landriz, UCSB, LIC=----
+ 
+Tool Versions:
+Toolchain:       MDK-Lite  Version: 5.39.0.0
+Toolchain Path:  C:\Keil_v5\ARM\ARMCLANG\Bin
+C Compiler:      ArmClang.exe V6.21
+Assembler:       Armasm.exe V6.21
+Linker/Locator:  ArmLink.exe V6.21
+Library Manager: ArmAr.exe V6.21
+Hex Converter:   FromElf.exe V6.21
+CPU DLL:         SARMCM3.DLL V5.39.0.0
+Dialog DLL:      DCM.DLL V1.17.5.0
+Target DLL:      STLink\ST-LINKIII-KEIL_SWO.dll V3.2.0.0
+Dialog DLL:      TCM.DLL V1.56.4.0
+ 
+<h2>Project:</h2>
+C:\Users\dmaharjan\Documents\GitHub\ECE153B\Template_L3\L3C\project.uvprojx
+Project File Date:  04/23/2025
+
+<h2>Output:</h2>
+*** Using Compiler 'V6.21', folder: 'C:\Keil_v5\ARM\ARMCLANG\Bin'
+Build target 'Target 1'
+src/main.c(11): warning: In file included from...
+src/stm32l476xx.h(12): warning: invalid UTF-8 in comment [-Winvalid-utf8]
+   12 |   *           - Macros to access peripheral<92>s registers hardware
+      |                                            ^
+src/main.c(13): warning: no previous extern declaration for non-static variable 'currentValue' [-Wmissing-variable-declarations]
+   13 | uint32_t volatile currentValue = 0;
+      |                   ^
+src/main.c(13): note: declare 'static' if the variable is not intended to be used outside of this translation unit
+   13 | uint32_t volatile currentValue = 0;
+      | ^
+src/main.c(14): warning: no previous extern declaration for non-static variable 'lastValue' [-Wmissing-variable-declarations]
+   14 | uint32_t volatile lastValue = 0;
+      |                   ^
+src/main.c(14): note: declare 'static' if the variable is not intended to be used outside of this translation unit
+   14 | uint32_t volatile lastValue = 0;
+      | ^
+src/main.c(15): warning: no previous extern declaration for non-static variable 'overflowCount' [-Wmissing-variable-declarations]
+   15 | uint32_t volatile overflowCount = 0;
+      |                   ^
+src/main.c(15): note: declare 'static' if the variable is not intended to be used outside of this translation unit
+   15 | uint32_t volatile overflowCount = 0;
+      | ^
+src/main.c(16): warning: no previous extern declaration for non-static variable 'timeInterval' [-Wmissing-variable-declarations]
+   16 | uint32_t volatile timeInterval = 0;
+      |                   ^
+src/main.c(16): note: declare 'static' if the variable is not intended to be used outside of this translation unit
+   16 | uint32_t volatile timeInterval = 0;
+      | ^
+src/main.c(18): warning: a function declaration without a prototype is deprecated in all versions of C [-Wstrict-prototypes]
+   18 | void Input_Capture_Setup() {
+      |                         ^
+      |                          void
+src/main.c(27): error: called object type 'uint32_t' (aka 'unsigned int') is not a function or function pointer
+   25 |         GPIOB->AFR[0] |= GPIO_AFRL_AFSEL6_1
+      |                          ~~~~~~~~~~~~~~~~~~
+   26 |         
+   27 |         RCC->APB1ENR1 |= RCC_APB1ENR1_TIM4EN;           //Enable timer
+      |         ^
+src/stm32l476xx.h(1397): note: expanded from macro 'RCC'
+ 1397 | #define RCC                 ((RCC_TypeDef *) RCC_BASE)
+      |                             ^
+src/main.c(18): warning: no previous prototype for function 'Input_Capture_Setup' [-Wmissing-prototypes]
+   18 | void Input_Capture_Setup() {
+      |      ^
+src/main.c(18): note: declare 'static' if the function is not intended to be used outside of this translation unit
+   18 | void Input_Capture_Setup() {
+      | ^
+      | static 
+src/main.c(54): warning: no previous prototype for function 'TIM4_IRQHandler' [-Wmissing-prototypes]
+   54 | void TIM4_IRQHandler(void) {
+      |      ^
+src/main.c(54): note: declare 'static' if the function is not intended to be used outside of this translation unit
+   54 | void TIM4_IRQHandler(void) {
+      | ^
+      | static 
+src/main.c(58): warning: a function declaration without a prototype is deprecated in all versions of C [-Wstrict-prototypes]
+   58 | void Trigger_Setup() {
+      |                   ^
+      |                    void
+src/main.c(58): warning: no previous prototype for function 'Trigger_Setup' [-Wmissing-prototypes]
+   58 | void Trigger_Setup() {
+      |      ^
+src/main.c(58): note: declare 'static' if the function is not intended to be used outside of this translation unit
+   58 | void Trigger_Setup() {
+      | ^
+      | static 
+10 warnings and 1 error generated.
+compiling main.c...
+".\Objects\project.axf" - 1 Error(s), 10 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                https://www.keil.com/pack/ARM.CMSIS.6.1.0.pack
+                ARM::CMSIS@6.1.0
+                CMSIS (Common Microcontroller Software Interface Standard)
+   * Component: CORE Version: 6.1.0
+
+Package Vendor: Keil
+                https://www.keil.com/pack/Keil.STM32L4xx_DFP.2.7.0.pack
+                Keil::STM32L4xx_DFP@2.7.0
+                STMicroelectronics STM32L4 Series Device Support, Drivers and Examples
+
+<h2>Collection of Component include folders:</h2>
+  ./RTE/_Target_1
+  C:/Keil_v5/Packs/ARM/CMSIS/6.1.0/CMSIS/Core/Include
+  C:/Keil_v5/Packs/Keil/STM32L4xx_DFP/2.7.0/Drivers/CMSIS/Device/ST/STM32L4xx/Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE@6.1.0
+Target not created.
+Build Time Elapsed:  00:00:01
+</pre>
+</body>
+</html>
