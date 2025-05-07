@@ -1,6 +1,4 @@
 /*
-
-
  * ECE 153B  – Lab 4A
  *
  * Low‑level USART (UART) support for STM32L4‑Nucleo.

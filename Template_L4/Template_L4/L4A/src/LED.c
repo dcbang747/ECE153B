@@ -1,9 +1,9 @@
 /*
  * ECE 153B
  *
- * Name(s): David Chang, 
+ * Name(s):
  * Section:
- * Lab: 4A
+ * Lab: 3A
  */
 
  #include "LED.h"
