@@ -45,6 +45,12 @@ void I2C_GPIO_Init(void)
 #define I2C_TIMINGR_SCLH_POS	8
 #define I2C_TIMINGR_SCLL_POS	0
 
+#define PRESC   7U     // Prescaler = 7 ? 10 MHz I2C clock
+#define SCLDEL  9U     // 1000 ns (tSCLDEL = (9+1)*100ns = 1000ns)
+#define SDADEL  12U    // 1250 ns (tSDADEL = (12+1)*100ns = 1300ns > 1250ns)
+#define SCLH    39U    // 4.0 µs (40 * 100ns)
+#define SCLL    46U    // 4.7 µs (47 * 100ns)
+
 //===============================================================================
 //                          I2C Initialization
 //===============================================================================
