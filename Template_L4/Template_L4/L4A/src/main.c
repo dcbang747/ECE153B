@@ -14,10 +14,10 @@
  #include <stdio.h>
  
  /* *** Choose the interface here ***
-  *    2 → USART2  (USB‑virtual‑COM‑port, Termite on PC)
-  *    1 → USART1  (HC‑05 Bluetooth module)
+  *    2 → USART2  (USB virtual COM port, Termite on PC)
+  *    1 → USART1  (HC 05 Bluetooth module)
   */
- static const int ACTIVE_USART = 2;   /* change to 1 for Bluetooth testing     */
+ static const int ACTIVE_USART = 1;   /* change to 1 for Bluetooth testing     */
  
  /* ------------------------------------------------------------------------- */
  static void Init_USARTx(int x)
@@ -38,7 +38,7 @@
  
  int main(void)
  {
-	 System_Clock_Init();   /* 80 MHz system clock                             */
+	 System_Clock_Init();   /* 80MHz system clock                             */
 	 LED_Init();            /* configure PA5                                   */
  
 	 Init_USARTx(ACTIVE_USART);
@@ -47,7 +47,7 @@
  
 	 while (1)
 	 {
-		 printf("\r\nEnter command (Y/y/N/n) → ");
+		 printf("\r\nEnter command (Y/y/N/n) ");
  
 		 /* The leading space skips CR/LF and other whitespace characters        */
 		 scanf(" %c", &cmd);
@@ -71,7 +71,7 @@
 				 break;
 		 }
  
-		 /* Extra safety for the HC‑05: re‑init USART1 each cycle to clear any
+		 /* Extra safety for the HC 05: re init USART1 each cycle to clear any
 			potential overflow/OR errors.                                        */
 		 if (ACTIVE_USART == 1)
 		 {

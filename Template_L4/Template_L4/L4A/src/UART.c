@@ -1,22 +1,22 @@
 /*
- * ECE 153B  – Lab 4A
+ * ECE153B  – Lab 4A
  *
- * Low‑level USART (UART) support for STM32L4‑Nucleo.
+ * Low level USART (UART) support for STM32L4 Nucleo.
  *
- * All USARTs run at 9 600 baud, 8 N 1, oversampling‑by‑16 and use the
- * 80 MHz system clock (SYSCLK) as their clock source.
+ * All USARTs run at 9600baud, 8N1, oversampling by 16 and use the
+ * 80MHz system clock (SYSCLK) as their clock source.
  */
 
  #include "UART.h"
  #include "stm32l476xx.h"
  
- #define SYSCLK_HZ   80000000UL   // System‑core frequency after SysClock.c config
+ #define SYSCLK_HZ   80000000UL   // System core frequency after SysClock.c config
  #define BAUDRATE    9600UL
  
  /* ————————————————————————————————————————  Private helpers ———————————————————————————————————————— */
  static uint32_t computeBRR(uint32_t periph_clk, uint32_t baud)
  {
-	 /* For oversampling‑by‑16:
+	 /* For oversampling by 16:
 		  USARTDIV = fCK / baud
 		BRR[15:4] = USARTDIV mantissa, BRR[3:0] = fraction
 		Here we round USARTDIV to the nearest integer and let hardware
@@ -31,7 +31,7 @@
 	 /* Enable peripheral clock on APB2                                           */
 	 RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
  
-	 /* Select SYSCLK (80 MHz) as USART1 clock source → CCIPR[3:2] = 0b11         */
+	 /* Select SYSCLK (80MHz) as USART1 clock source → CCIPR[3:2] = 0b11         */
 	 RCC->CCIPR &= ~RCC_CCIPR_USART1SEL;
 	 RCC->CCIPR |=  (3U << 2);
  }
@@ -41,7 +41,7 @@
 	 /* Enable peripheral clock on APB1                                           */
 	 RCC->APB1ENR1 |= RCC_APB1ENR1_USART2EN;
  
-	 /* Select SYSCLK (80 MHz) as USART2 clock source → CCIPR[5:4] = 0b11         */
+	 /* Select SYSCLK (80MHz) as USART2 clock source → CCIPR[5:4] = 0b11         */
 	 RCC->CCIPR &= ~RCC_CCIPR_USART2SEL;
 	 RCC->CCIPR |=  (3U << 4);
  }
@@ -50,20 +50,20 @@
  
  void UART1_GPIO_Init(void)
  {
-	 /* PB6 = TX, PB7 = RX  → alternate‑function 7                                */
+	 /* PB6 = TX, PB7 = RX  → alternate function 7                                */
 	 RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
  
 	 /* MODER: alternate (10)                                                     */
 	 GPIOB->MODER &= ~(GPIO_MODER_MODE6 | GPIO_MODER_MODE7);
 	 GPIOB->MODER |=  (GPIO_MODER_MODE6_1 | GPIO_MODER_MODE7_1);
  
-	 /* OTYPER: push‑pull                                                         */
+	 /* OTYPER: push pull                                                         */
 	 GPIOB->OTYPER &= ~(GPIO_OTYPER_OT6 | GPIO_OTYPER_OT7);
  
-	 /* OSPEEDR: very‑high speed (11)                                             */
+	 /* OSPEEDR: very high speed (11)                                             */
 	 GPIOB->OSPEEDR |= (3U << (6 * 2)) | (3U << (7 * 2));
  
-	 /* PUPDR: pull‑up (01)                                                       */
+	 /* PUPDR: pull up (01)                                                       */
 	 GPIOB->PUPDR &= ~(GPIO_PUPDR_PUPD6 | GPIO_PUPDR_PUPD7);
 	 GPIOB->PUPDR |=  (GPIO_PUPDR_PUPD6_0 | GPIO_PUPDR_PUPD7_0);
  
@@ -74,7 +74,7 @@
  
  void UART2_GPIO_Init(void)
  {
-	 /* PA2 = TX, PA3 = RX  → alternate‑function 7                                */
+	 /* PA2 = TX, PA3 = RX  → alternate function 7                                */
 	 RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
  
 	 GPIOA->MODER &= ~(GPIO_MODER_MODE2 | GPIO_MODER_MODE3);
@@ -98,10 +98,10 @@
 	 /* 1. Disable USART while configuring                                        */
 	 USARTx->CR1 &= ~USART_CR1_UE;
  
-	 /* 2. Word length = 8 bits, parity disabled, oversample‑by‑16                */
+	 /* 2. Word length=8bits, parity disabled, oversample by 16                */
 	 USARTx->CR1 &= ~(USART_CR1_M0 | USART_CR1_M1 | USART_CR1_PCE | USART_CR1_OVER8);
  
-	 /* 3. Stop bits = 1                                                          */
+	 /* 3. Stop bits=1                                                          */
 	 USARTx->CR2 &= ~USART_CR2_STOP;
  
 	 /* 4. Baud rate                                                              */
@@ -110,7 +110,7 @@
 	 /* 5. Enable transmitter and receiver                                        */
 	 USARTx->CR1 |= USART_CR1_TE | USART_CR1_RE;
  
-	 /* 6. Re‑enable the USART                                                    */
+	 /* 6. Reenable the USART                                                    */
 	 USARTx->CR1 |= USART_CR1_UE;
  
 	 /* Optional: wait until acknowledge flags are set                            */
