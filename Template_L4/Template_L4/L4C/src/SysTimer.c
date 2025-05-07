@@ -1,4 +1,3 @@
-
 #include "SysTimer.h"
 
 static volatile uint32_t msTicks;
@@ -16,7 +15,7 @@ void SysTick_Init(void){
 	SysTick->CTRL = 0;										// Disable SysTick IRQ and SysTick Counter
 	
 	// SysTick Reload Value Register
-	SysTick->LOAD = 0;    // [TODO] 1ms, 80MHz clock
+	SysTick->LOAD =  80000U - 1U;         /* 80 MHz / 80 000 = 1 kHz         */
 	
 	// SysTick Current Value Register
 	SysTick->VAL = 0;
@@ -47,6 +46,8 @@ void SysTick_Handler(void){
 //******************************************************************************************
 // Delay in ms
 //******************************************************************************************
-void delay (uint32_t T){
-	// [TODO]
+void delay(uint32_t ms)
+{
+    uint32_t target = msTicks + ms;
+    while ((int32_t)(target - msTicks) > 0);
 }
