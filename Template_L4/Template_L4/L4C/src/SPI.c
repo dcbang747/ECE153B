@@ -1,5 +1,5 @@
 /*
- * SPI1 (PA4 NSS, PB3 SCK, PB4 MISO, PB5 MOSI) – master, 16‑bit, mode‑3
+ * SPI1 (PA4 NSS, PB3 SCK, PB4 MISO, PB5 MOSI) – master, 16bit, mode3
  */
 
  #include "SPI.h"
@@ -33,7 +33,7 @@
 						(5U << (4 * 4)) |
 						(5U << (5 * 4));
  
-	 /* Very‑high speed, push‑pull, no pull‑ups */
+	 /* Veryhigh speed, pushpull, no pullups */
 	 GPIOA->OSPEEDR |= 3U << (4 * 2);
 	 GPIOB->OSPEEDR |= 3U << (3 * 2) | 3U << (4 * 2) | 3U << (5 * 2);
  }
@@ -51,12 +51,12 @@
 	 /* CR1 – baud, polarity, phase, master, prescaler ÷16 (80 MHz→5 MHz)  */
 	 SPI1->CR1 = 0;
 	 SPI1->CR1 |= SPI_CR1_MSTR |
-				  SPI_CR1_CPOL | SPI_CR1_CPHA |       /* mode‑3             */
+				  SPI_CR1_CPOL | SPI_CR1_CPHA |       /* mode3             */
 				  SPI_CR1_BR_2;                       /* BR=100b → ÷16      */
  
-	 /* CR2 – 16‑bit frame, hardware NSS, FRXTH=0 (½), NSS pulse + SSOE    */
+	 /* CR2 – 16bit frame, hardware NSS, FRXTH=0 (½), NSS pulse + SSOE    */
 	 SPI1->CR2 = 0;
-	 SPI1->CR2 |= (15U << SPI_CR2_DS_Pos) |           /* 16‑bit data        */
+	 SPI1->CR2 |= (15U << 8) |           /* 16bit data        */
 				  SPI_CR2_NSSP |                      /* NSS pulse          */
 				  SPI_CR2_SSOE;                       /* NSS output enable  */
  
@@ -67,9 +67,9 @@
  uint16_t SPI_Transfer_Data(uint16_t w)
  {
 	 while (!(SPI1->SR & SPI_SR_TXE));        /* TX buffer empty        */
-	 *((__IO uint16_t *)&SPI1->DR) = w;       /* 16‑bit write           */
+	 *((__IO uint16_t *)&SPI1->DR) = w;       /* 16bit write           */
 	 while (SPI1->SR &  SPI_SR_BSY);          /* wait not busy          */
 	 while (!(SPI1->SR & SPI_SR_RXNE));       /* RX buffer full         */
-	 return *((__IO uint16_t *)&SPI1->DR);    /* 16‑bit read            */
+	 return *((__IO uint16_t *)&SPI1->DR);    /* 16bit read            */
  }
  

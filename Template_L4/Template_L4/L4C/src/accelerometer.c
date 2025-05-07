@@ -8,6 +8,13 @@
 #define REG_DATA_FORMAT 0x31
 #define REG_DATAX0      0x32   /* six data bytes start here */
 
+#define REG_DATAX1  (REG_DATAX0 + 1) // hard coded offsets
+#define REG_DATAY0  (REG_DATAX0 + 2)
+#define REG_DATAY1  (REG_DATAX0 + 3)
+#define REG_DATAZ0  (REG_DATAX0 + 4)
+#define REG_DATAZ1  (REG_DATAX0 + 5)
+
+
 static inline uint16_t make_cmd(uint8_t addr, uint8_t rw)
 {
     /* rw = 1 for read, 0 for write; MB = 0 (single byte)                    */

@@ -27,42 +27,7 @@ Project File Date:  05/06/2025
 <h2>Output:</h2>
 *** Using Compiler 'V6.21', folder: 'C:\Keil_v5\ARM\ARMCLANG\Bin'
 Build target 'Target 1'
-src/SPI.c(18): warning: implicit conversion changes signedness: 'int' to 'uint32_t' (aka 'unsigned int') [-Wsign-conversion]
-   18 |          GPIOA->AFR[0]  &= ~(0xF << (4 * 4));
-      |                         ~~ ^~~~~~~~~~~~~~~~~
-src/SPI.c(29): warning: implicit conversion changes signedness: 'int' to 'uint32_t' (aka 'unsigned int') [-Wsign-conversion]
-   29 |          GPIOB->AFR[0]  &= ~((0xF << (3 * 4)) |
-      |                         ~~ ^~~~~~~~~~~~~~~~~~~~
-   30 |                                                  (0xF << (4 * 4)) |
-      |                                                  ~~~~~~~~~~~~~~~~~~
-   31 |                                                  (0xF << (5 * 4)));
-      |                                                  ~~~~~~~~~~~~~~~~~
-src/SPI.c(59): error: use of undeclared identifier 'SPI_CR2_DS_Pos'
-   59 |          SPI1->CR2 |= (15U << SPI_CR2_DS_Pos) |           /* 16‑bit data        */
-      |                               ^
-src/SPI.c(75): warning: no newline at end of file [-Wnewline-eof]
-   75 |  
-      |  ^
-3 warnings and 1 error generated.
-compiling SPI.c...
-src/accelerometer.c(14): warning: implicit conversion loses integer precision: 'int' to 'uint8_t' (aka 'unsigned char') [-Wimplicit-int-conversion]
-   14 |     uint8_t cmd = (rw << 7) | (0 << 6) | (addr & 0x3F);
-      |             ~~~   ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~
-src/accelerometer.c(15): warning: implicit conversion loses integer precision: 'int' to 'uint16_t' (aka 'unsigned short') [-Wimplicit-int-conversion]
-   15 |     return (uint16_t)cmd << 8;           /* command is sent first (MSB)      */
-      |     ~~~~~~ ~~~~~~~~~~~~~~^~~~
-src/accelerometer.c(45): error: use of undeclared identifier 'REG_DATAX1'
-   45 |     int16_t rawX = (int16_t)((accRead(REG_DATAX1) << 8) | accRead(REG_DATAX0));
-      |                                       ^
-src/accelerometer.c(46): error: use of undeclared identifier 'REG_DATAX1'
-   46 |     int16_t rawY = (int16_t)((accRead(REG_DATAX1 + 2) << 8) | accRead(REG_DATAX0 + 2));
-      |                                       ^
-src/accelerometer.c(47): error: use of undeclared identifier 'REG_DATAX1'
-   47 |     int16_t rawZ = (int16_t)((accRead(REG_DATAX1 + 4) << 8) | accRead(REG_DATAX0 + 4));
-      |                                       ^
-2 warnings and 3 errors generated.
-compiling accelerometer.c...
-".\Objects\project.axf" - 4 Error(s), 5 Warning(s).
+".\Objects\project.axf" - 0 Error(s), 0 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -85,7 +50,6 @@ Package Vendor: Keil
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE@5.6.0
-Target not created.
 Build Time Elapsed:  00:00:01
 </pre>
 </body>

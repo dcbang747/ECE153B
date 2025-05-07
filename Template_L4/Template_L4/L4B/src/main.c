@@ -11,6 +11,7 @@
 #include "SysClock.h"
 #include "UART.h"
 #include <string.h>
+#include <stdio.h>
 
 // Initializes USARTx
 // USART2: UART Communication with Termite

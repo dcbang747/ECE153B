@@ -3,6 +3,8 @@
 #define SYSCLK_HZ 80000000UL
 #define BAUDRATE  9600UL
 
+uint32_t SystemCoreClock = 80000000;
+
 static uint32_t brr_val(uint32_t pclk, uint32_t baud)
 {
     return (pclk + baud/2U) / baud;
