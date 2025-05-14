@@ -12,8 +12,11 @@ void DAC_Init(void) {
     DAC_Pin_Init();
 
     // [TODO] Enable DAC clock
+		RCC->APB1ENR1 = RCC_APB1ENR1_DAC1EN;
+		DAC1->CR &= ~DAC_CR_CEN1;
 
     // [TODO] Enable software trigger mode
+		
 
     // [TODO] Disable trigger
 

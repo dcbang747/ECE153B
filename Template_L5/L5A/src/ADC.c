@@ -41,6 +41,8 @@ void ADC_Common_Configuration() {
 
 void ADC_Pin_Init(void) {
     // [TODO]
+	// turn on gpioa 
+		RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
 		GPIOA->MODER &= ~GPIO_MODER_MODE1;		//Clear pin PA1
 		GPIOA->MODER |= GPIO_MODER_MODE1;			//Analog mode
 		GPIOA->PUPDR &= ~GPIO_PUPDR_PUPD1;		//No pull up, no pull down
@@ -58,9 +60,9 @@ void ADC_Init(void) {
     ADC_Pin_Init();
     ADC_Common_Configuration();
     ADC_Wakeup();
-
+		ADC1->CR &= ~ADC_CR_ADEN;							
     // [TODO] Other Configuration
-		ADC1->CR |= ADC_CR_ADDIS;								//3. disable adc
+		//ADC1->CR |= ADC_CR_ADDIS;								//3. disable adc
 		ADC1->CFGR &= ~ADC_CFGR_RES;						//4. 12 bit resolution, bits 4:3 = 00
 		ADC1->CFGR &= ~ADC_CFGR_ALIGN;					//right align, bit 5 = 0
 		
@@ -75,5 +77,5 @@ void ADC_Init(void) {
 	
 		ADC1->CR |= ADC_CR_ADEN;							//9. Enable adc
 	
-		while(!(ADC1->ISR && ADC_ISR_ADRDY));							//wait until adc ready
+		while(!(ADC1->ISR & ADC_ISR_ADRDY));							//wait until adc ready
 }
