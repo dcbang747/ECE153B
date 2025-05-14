@@ -31,12 +31,17 @@ void ADC_Wakeup(void) {
 
 void ADC_Common_Configuration() {
     // [TODO]
-		SYSCFG->CFGR1 |= SYSCFG_CFGR1_BOOSTEN;		//Enable I/O analog switch voltage booster
-		
-		ADC123_COMMON->CCR |= ADC_CCR_VREFEN;			//Enable V_refint
-		ADC123_COMMON->CCR |= ADC_CCR_PRESC;			//clock not divided
-		ADC123_COMMON->CCR |= ADC_CCR_CKMODE_0;		//HCLK/1 clock mode
-		ADC123_COMMON->CCR &= ~ADC_CCR_DUAL;			//all ADC in indep mode
+    /* 1 – I/O analog-switch voltage booster */
+        SYSCFG->CFGR1 |= SYSCFG_CFGR1_BOOSTEN;
+
+        /* 2 – Common ADC settings                          *
+        *    • VREFINT on                                   *
+        *    • No prescaler (PRESC = 0000)                  *
+        *    • CKMODE = 01 → HCLK/1 synchronous             *
+        *    • Independent mode (DUAL = 0000)               */
+        ADC123_COMMON->CCR &= ~(ADC_CCR_PRESC | ADC_CCR_CKMODE |
+                                ADC_CCR_DUAL  | ADC_CCR_VREFEN);
+        ADC123_COMMON->CCR |=  ADC_CCR_VREFEN | ADC_CCR_CKMODE_0;
 }
 
 void ADC_Pin_Init(void) {
@@ -60,22 +65,31 @@ void ADC_Init(void) {
     ADC_Pin_Init();
     ADC_Common_Configuration();
     ADC_Wakeup();
-		ADC1->CR &= ~ADC_CR_ADEN;							
-    // [TODO] Other Configuration
-		//ADC1->CR |= ADC_CR_ADDIS;								//3. disable adc
-		ADC1->CFGR &= ~ADC_CFGR_RES;						//4. 12 bit resolution, bits 4:3 = 00
-		ADC1->CFGR &= ~ADC_CFGR_ALIGN;					//right align, bit 5 = 0
-		
-		ADC1->SQR1 &= ~ADC_SQR1_L;							//5. sequence length of 1, all bits 0
-		ADC1->SQR1 |= (ADC_SQR1_SQ1_2 | ADC_SQR1_SQ1_1); //first conversion is channel 6, bits 10:6 = 0110
-	
-		ADC1->DIFSEL |= ADC_DIFSEL_DIFSEL_6;		//6. channel 6 to single ended mode
-		ADC1->SMPR1 |= (ADC_SMPR1_SMP6_1 | ADC_SMPR1_SMP6_0);		//7. sampling time 24.5
-	
-		ADC1->CFGR &= ~ADC_CFGR_CONT;					//8. Single conversion mode
-		ADC1->CFGR &= ~ADC_CFGR_EXTEN;				//hardware trigger dectetion disabled
-	
-		ADC1->CR |= ADC_CR_ADEN;							//9. Enable adc
-	
-		while(!(ADC1->ISR & ADC_ISR_ADRDY));							//wait until adc ready
+	    /* Ensure ADC disabled before config */
+    if (ADC1->CR & ADC_CR_ADEN) {
+        ADC1->CR |= ADC_CR_ADDIS;
+        while (ADC1->CR & ADC_CR_ADEN);
+    }
+
+    /* 12-bit resolution, right alignment */
+    ADC1->CFGR &= ~(ADC_CFGR_RES | ADC_CFGR_ALIGN);
+
+    /* Single-conversion sequence length = 1, SQ1 = channel 6 */
+    ADC1->SQR1 &= ~(ADC_SQR1_L | (0x1F << 6));
+    ADC1->SQR1 |=  (6U << 6);
+
+    /* Channel 6 → single-ended */
+    ADC1->DIFSEL &= ~ADC_DIFSEL_DIFSEL_6;
+
+    /* Sample time channel 6 = 24.5 cycles (0b011) */
+    ADC1->SMPR1 &= ~ADC_SMPR1_SMP6;
+    ADC1->SMPR1 |=  (ADC_SMPR1_SMP6_1 | ADC_SMPR1_SMP6_0);
+
+    /* Single conversion, software trigger only */
+    ADC1->CFGR &= ~(ADC_CFGR_CONT | ADC_CFGR_EXTEN);
+
+    /* Enable ADC and wait for readiness */
+    ADC1->ISR |=  ADC_ISR_ADRDY;        /* clear */
+    ADC1->CR  |=  ADC_CR_ADEN;
+    while (!(ADC1->ISR & ADC_ISR_ADRDY));
 }
