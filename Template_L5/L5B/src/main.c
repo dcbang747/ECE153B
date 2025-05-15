@@ -15,7 +15,7 @@
 #include "stm32l476xx.h"
 #include <stdio.h>
 
-volatile uint32_t g_adc_value = 0;   /* for Logic-Analyzer viewing */
+volatile uint32_t measurement = 0;   /* for Logic-Analyzer viewing */
 
 int main(void) {
     /* Initialisation */
@@ -30,9 +30,9 @@ int main(void) {
         /* Trigger one ADC conversion */
         ADC1->CR |= ADC_CR_ADSTART;
         while (!(ADC1->ISR & ADC_ISR_EOC));
-        g_adc_value = ADC1->DR;                     /* read & clear EOC */
+        measurement = ADC1->DR;                     /* read & clear EOC */
 
         /* Map 0-4095 → 0-1000 PWM duty */
-        TIM2->CCR1 = (g_adc_value * 1000U) / 4095U;
+        TIM2->CCR1 = (measurement * 1000U) / 4095U;
     }
 }
