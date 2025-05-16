@@ -19,7 +19,7 @@ volatile uint32_t measurement = 000;   /* for Logic-Analyzer viewing */
 
 int main(void) {
     /* Initialisation */
-    System_Clock_Init();            /* 16 MHz HSI */
+    System_Clock_Init();             /* 4 MHz */
     ADC_Init();
     DAC_Init();
     EXTI_Init();
