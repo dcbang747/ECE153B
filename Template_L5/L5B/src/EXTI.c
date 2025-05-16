@@ -53,4 +53,4 @@ void EXTI15_10_IRQHandler(void) {
         }
         DAC_Write_Value(dac_value);
     }
-}   
+}
