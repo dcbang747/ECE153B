@@ -1,37 +1,49 @@
 #include "stm32l476xx.h"
+#include "DAC.h"
 
-static void DAC_Pin_Init(void) {
-    /* PA4 analog output */
+static void DAC_Pin_Init(void);
+
+/*------------------------------------------------------------------*/
+static void DAC_Pin_Init(void)
+{
+    /* PA4 → analog (DAC1_OUT1) */
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
 
-    GPIOA->MODER &= ~GPIO_MODER_MODE4;
-    GPIOA->MODER |=  GPIO_MODER_MODE4;       /* analog (11) */
+    GPIOA->MODER |=  GPIO_MODER_MODE4;      /* 11b = analog */
     GPIOA->PUPDR &= ~GPIO_PUPDR_PUPD4;
-    GPIOA->ASCR  |=  GPIO_ASCR_ASC4;         /* connect switch */
+    GPIOA->ASCR  |=  GPIO_ASCR_ASC4;
 }
 
-void DAC_Write_Value(uint32_t value) {
-    if (value > 4095U) value = 4095U;
-    DAC1->DHR12R1 = value;                   /* 12-bit right-aligned */
+/*------------------------------------------------------------------*/
+void DAC_Write_Value(uint32_t value)
+{
+    /* right-aligned 12-bit data register (DHR12R1) */
+    value &= 0x0FFFUL;                      /* clamp to 12 bits */
+    DAC1->DHR12R1 = value;
 }
 
-void DAC_Init(void) {
+/*------------------------------------------------------------------*/
+void DAC_Init(void)
+{
     DAC_Pin_Init();
 
-    /* 1 – enable DAC clock */
+    /* enable clock */
     RCC->APB1ENR1 |= RCC_APB1ENR1_DAC1EN;
 
-    /* 2 – be sure channel 1 disabled */
+    /* make sure ch1 disabled first */
     DAC1->CR &= ~DAC_CR_EN1;
 
-    /* 3 + 4 – software trigger selected but trigger disabled (TEN1 = 0) */
+    /* TSEL1 = 000 → software trigger;  TEN1 = 0 → trigger disabled */
     DAC1->CR &= ~(DAC_CR_TEN1 | DAC_CR_TSEL1);
 
-    /* 5 – normal mode, buffer enabled (MODE1 bits = 00) */
-    DAC1->MCR &= ~DAC_MCR_MODE1;
+    /* MODE1 = 000 → normal mode, buffer enabled, output on PA4 */
+    DAC1->MCR &= ~(DAC_MCR_MODE1);
 
-    /* 6 – enable channel 1 */
+    /* enable channel 1 */
     DAC1->CR |= DAC_CR_EN1;
 
     DAC_Write_Value(0);
 }
+c
+Copy
+Edit
