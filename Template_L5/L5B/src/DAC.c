@@ -19,6 +19,7 @@ void DAC_Write_Value(uint32_t value)
 {
     /* right-aligned 12-bit data register (DHR12R1) */
     value &= 0x0FFFUL;                      /* clamp to 12 bits */
+		DAC1->DHR12R1 &= value;
     DAC1->DHR12R1 = value;
 }
 
@@ -42,8 +43,5 @@ void DAC_Init(void)
     /* enable channel 1 */
     DAC1->CR |= DAC_CR_EN1;
 
-    DAC_Write_Value(0);
+    DAC_Write_Value(200);
 }
-c
-Copy
-Edit

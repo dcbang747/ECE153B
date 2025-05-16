@@ -15,7 +15,7 @@
 #include "stm32l476xx.h"
 #include <stdio.h>
 
-volatile uint32_t measurement = 0;   /* for Logic-Analyzer viewing */
+volatile uint32_t measurement = 000;   /* for Logic-Analyzer viewing */
 
 int main(void) {
     /* Initialisation */
