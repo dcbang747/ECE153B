@@ -4,26 +4,26 @@
 
 /* USER button on PC13, active-low */
 void EXTI_Init(void) {
-    /* Enable GPIOC clock */
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
 
     /* PC13 input with pull-up */
-    GPIOC->PUPDR &= ~GPIO_PUPDR_PUPD13;
-    GPIOC->PUPDR |=  GPIO_PUPDR_PUPD13_0;   /* pull-up (01) */
+    GPIOC->PUPDR &= ~GPIO_PUPDR_PUPDR13;
+    GPIOC->PUPDR |=  GPIO_PUPDR_PUPDR13_0;
 
-    /* Map EXTI13 to PC13 */
+    /* Map EXTI13 to PC */
     SYSCFG->EXTICR[3] &= ~SYSCFG_EXTICR4_EXTI13;
     SYSCFG->EXTICR[3] |=  SYSCFG_EXTICR4_EXTI13_PC;
 
-    /* Falling-edge trigger, unmask line 13 */
-    EXTI->FTSR1 |=  EXTI_FTSR1_FT13;
-    EXTI->RTSR1 &= ~EXTI_RTSR1_RT13;
-    EXTI->IMR1  |=  EXTI_IMR1_IM13;
+    /* Falling-edge trigger, unmask */
+    EXTI->FTSR1 |=  (1U << 13);
+    EXTI->RTSR1 &= ~(1U << 13);
+    EXTI->IMR1  |=  (1U << 13);
 
-    /* Clear pending and enable NVIC */
-    EXTI->PR1 = EXTI_PR1_PIF13;
+    EXTI->PR1   |=  (1U << 13);     /* clear pending */
     NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
+
+
 
 #define DAC_MIN       0U
 #define DAC_MAX    4095U
@@ -33,8 +33,8 @@ static uint32_t dac_value = 0;
 static enum { DOWN, UP } direction = UP;
 
 void EXTI15_10_IRQHandler(void) {
-    if (EXTI->PR1 & EXTI_PR1_PIF13) {
-        EXTI->PR1 = EXTI_PR1_PIF13;          /* clear flag */
+        if (EXTI->PR1 & (1U << 13)) {
+            EXTI->PR1 = (1U << 13);        
 
         if (direction == UP) {
             if (dac_value + DAC_INCREMENT >= DAC_MAX) {
