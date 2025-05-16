@@ -42,8 +42,24 @@ void EXTI_Init(void)
 // interrupt handler names that you should use)
 void EXTI15_10_IRQHandler(void)
 {
-        dac_value += 256;
+    if (EXTI->PR1 & EXTI_PR1_PIF13) {
+        EXTI->PR1 = EXTI_PR1_PIF13;          /* clear flag */
+
+        if (direction == UP) {
+            if (dac_value + DAC_INCREMENT >= DAC_MAX) {
+                dac_value = DAC_MAX;
+                direction = DOWN;
+            } else {
+                dac_value += DAC_INCREMENT;
+            }
+        } else { /* direction DOWN */
+            if (dac_value <= DAC_INCREMENT) {
+                dac_value = DAC_MIN;
+                direction = UP;
+            } else {
+                dac_value -= DAC_INCREMENT;
+            }
+        }
         DAC_Write_Value(dac_value);
-				
-				EXTI->PR1|= EXTI_PR1_PIF13;
+    }
 }
