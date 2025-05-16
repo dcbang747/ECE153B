@@ -12,23 +12,20 @@ static enum { DOWN, UP } direction = UP;
 /*------------------------------------------------------------------*/
 void EXTI_Init(void)
 {
-    /* user push-button: PC13 (active-low) ------------------------- */
-    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;     /* PC clock */
+    /* 1. Enable clocks ---------------------------------------------------- */
+    RCC->AHB2ENR  |= RCC_AHB2ENR_GPIOCEN;     /* GPIOC clock       */
+    RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;     /* *** SYSCFG clock ***/
 
-    /* PC13 input (reset state), no pull-up/pull-down => leave as is */
-
-    /* EXTI line13 -> PC13 */
+    /* 2. Map EXTI line 13 to PC13 ---------------------------------------- */
     SYSCFG->EXTICR[3] &= ~SYSCFG_EXTICR4_EXTI13;
     SYSCFG->EXTICR[3] |=  SYSCFG_EXTICR4_EXTI13_PC;
 
-    /* falling-edge trigger */
-    EXTI->FTSR1 |=  EXTI_FTSR1_FT13;
-    EXTI->RTSR1 &= ~EXTI_RTSR1_RT13;
+    /* 3. Select edge(s) --------------------------------------------------- */
+    EXTI->RTSR1 |=  EXTI_RTSR1_RT13;    /* rising edge  */
+    EXTI->FTSR1 &= ~EXTI_FTSR1_FT13;    /* comment this line if you want both */
 
-    /* unmask */
-    EXTI->IMR1  |=  EXTI_IMR1_IM13;
-
-    /* NVIC enable */
+    /* 4. Unmask & NVIC ---------------------------------------------------- */
+    EXTI->IMR1  |=  EXTI_IMR1_IM13;     /* line enable    */
     NVIC_EnableIRQ(EXTI15_10_IRQn);
     NVIC_SetPriority(EXTI15_10_IRQn, 1);
 }
