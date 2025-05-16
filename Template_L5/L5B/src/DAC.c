@@ -43,5 +43,5 @@ void DAC_Init(void)
     /* enable channel 1 */
     DAC1->CR |= DAC_CR_EN1;
 
-    DAC_Write_Value(500);
+    DAC_Write_Value(0);
 }

@@ -8,8 +8,6 @@
 
 
 #include "ADC.h"
-#include "DAC.h"
-#include "EXTI.h"
 #include "PWM.h"
 #include "SysClock.h"
 #include "stm32l476xx.h"
@@ -20,10 +18,8 @@ volatile uint32_t g_adc_value = 0;      /* for Logic-Analyzer tracing */
 int main(void)
 {
     /* clocks & peripherals -------------------------------------------------- */
-    System_Clock_Init();   /* 16 MHz HSI */
+    System_Clock_Init();   
     ADC_Init();
-    DAC_Init();
-    EXTI_Init();
     LED_Pin_Init();
     TIM2_CH1_Init();
 

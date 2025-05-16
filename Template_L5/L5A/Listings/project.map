@@ -8,7 +8,7 @@ Section Cross References
     main.o(.text.main) refers to adc.o(.text.ADC_Init) for ADC_Init
     main.o(.text.main) refers to pwm.o(.text.LED_Pin_Init) for LED_Pin_Init
     main.o(.text.main) refers to pwm.o(.text.TIM2_CH1_Init) for TIM2_CH1_Init
-    main.o(.text.main) refers to main.o(.bss.measurement) for measurement
+    main.o(.text.main) refers to main.o(.bss.g_adc_value) for g_adc_value
     main.o(.ARM.exidx.text.main) refers to main.o(.text.main) for [Anonymous Symbol]
     startup_stm32l476xx.o(STACK) refers (Special) to heapauxi.o(.text) for __use_two_region_memory
     startup_stm32l476xx.o(HEAP) refers (Special) to heapauxi.o(.text) for __use_two_region_memory
@@ -520,7 +520,7 @@ Image Symbol Table
     Image$$RW_IRAM1$$ZI$$Base                0x20000000   Number         0  anon$$obj.o ABSOLUTE
     __libspace_start                         0x20000000   Data          96  libspace.o(.bss)
     __temporary_stack_top$libspace           0x20000060   Data           0  libspace.o(.bss)
-    measurement                              0x20000060   Data           4  main.o(.bss.measurement)
+    g_adc_value                              0x20000060   Data           4  main.o(.bss.g_adc_value)
     Image$$RW_IRAM1$$ZI$$Limit               0x20000668   Number         0  anon$$obj.o ABSOLUTE
 
 
@@ -618,7 +618,7 @@ Memory Map of the image
     Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
 
     0x20000000        -       0x00000060   Zero   RW           87    .bss                c_w.l(libspace.o)
-    0x20000060        -       0x00000004   Zero   RW            4    .bss.measurement    main.o
+    0x20000060        -       0x00000004   Zero   RW            4    .bss.g_adc_value    main.o
     0x20000064   0x080006d8   0x00000004   PAD
     0x20000068        -       0x00000200   Zero   RW           12    HEAP                startup_stm32l476xx.o
     0x20000268        -       0x00000400   Zero   RW           11    STACK               startup_stm32l476xx.o
@@ -632,13 +632,13 @@ Image component sizes
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
 
        418          0          0          0          0       3135   adc.o
-       120          0          0          0          4       2030   main.o
+       120          0          0          0          4       2026   main.o
        216          0          0          0          0       2305   pwm.o
        140         48        392          0       1536        892   startup_stm32l476xx.o
        114          0          0          0          0       1451   sysclock.o
 
     ----------------------------------------------------------------------
-      1016         48        408          0       1544       9813   Object Totals
+      1016         48        408          0       1544       9809   Object Totals
          0          0         16          0          0          0   (incl. Generated)
          8          0          0          0          4          0   (incl. Padding)
 
@@ -688,8 +688,8 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-      1344         64        408          0       1640      10297   Grand Totals
-      1344         64        408          0       1640      10297   ELF Image Totals
+      1344         64        408          0       1640      10293   Grand Totals
+      1344         64        408          0       1640      10293   ELF Image Totals
       1344         64        408          0          0          0   ROM Totals
 
 ==============================================================================
