@@ -29,8 +29,7 @@ int main(void) {
         while (!(ADC1->ISR & ADC_ISR_EOC));   /* wait */
 
         /* Read result (clears EOC) */
-        uint16_t raw = ADC1->DR;
-        measurement = raw;
+        measurement = ADC1->DR;
 
         /* Map 0-4095 → 0-1000 duty */
         uint32_t duty = (measurement * 1000U) / 4095U;
