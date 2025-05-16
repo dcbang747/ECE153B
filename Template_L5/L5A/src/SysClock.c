@@ -7,7 +7,7 @@ void System_Clock_Init(void) {
 
     /* Select 8 MHz range (Range 6) and make MSIRANGE effective */
     RCC->CR &= ~RCC_CR_MSIRANGE;
-    RCC->CR |=  RCC_CR_MSIRANGE_6;    /* 4 MHz */
+    RCC->CR |=  RCC_CR_MSIRANGE_5;    /* 2 MHz */
     RCC->CR |=  RCC_CR_MSIRGSEL;
 
     /* Switch SYSCLK to MSI */

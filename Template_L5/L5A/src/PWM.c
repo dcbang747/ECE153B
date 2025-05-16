@@ -18,8 +18,8 @@ void LED_Pin_Init(void) {
 void TIM2_CH1_Init(void) {
     RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN;
 
-    TIM2->PSC  = 3U;          /* 8 MHz / (3+1) = 2 MHz */
-    TIM2->ARR  = 999U;        /* → 2 kHz PWM */
+    TIM2->PSC  = 3;          
+    TIM2->ARR  = 4095;        
     TIM2->CCR1 = 0U;
 
     /* PWM mode 1, preload enable */
