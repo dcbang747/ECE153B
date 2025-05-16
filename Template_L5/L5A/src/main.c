@@ -17,11 +17,18 @@
 
 int main(void) {
     System_Clock_Init();   /* 8 MHz MSI */
+    // Force reset of Trace
+    CoreDebug->DEMCR &= ~CoreDebug_DEMCR_TRCENA_Msk;   /* disable */
+    CoreDebug->DEMCR |=  CoreDebug_DEMCR_TRCENA_Msk;   /* re-enable */
+    TPI->SPPR         = 2;                             /* NRZ protocol */
+    TPI->FFCR        |= TPI_FFCR_EnFCont_Msk;          /* flush-on-overflow */
+
     ADC_Init();
 
     // [TODO] Initialize PWM
 	  LED_Pin_Init();
 	  TIM2_CH1_Init();
+      uint32_t decimator = 0; 
 		
     while (1) {
         /* Trigger a single conversion */
@@ -31,6 +38,10 @@ int main(void) {
         /* Read result (clears EOC) */
         uint16_t raw = ADC1->DR;
         measurement = raw;
+
+        if ((decimator++ & 0xFF) == 0) {
+            adc_trace = raw;       Delayer
+        }
 
         /* Map 0-4095 → 0-1000 duty */
         uint32_t duty = (measurement * 1000U) / 4095U;
