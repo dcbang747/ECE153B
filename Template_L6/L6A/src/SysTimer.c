@@ -59,6 +59,4 @@ uint32_t endTimer(void)
     uint32_t ticks = step * (SysTick->LOAD + 1UL) + (SysTick->LOAD - SysTick->VAL);
     return ticks / 80UL;                                 /* 80 cycles = 1 µs*/
 }
-c
-Copy
-Edit
+

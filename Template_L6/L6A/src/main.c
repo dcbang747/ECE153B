@@ -6,6 +6,8 @@
 #include "LED.h"
 #include "CRC.h"
 #include "UART.h"
+#include <string.h>
+#include <stdio.h>
 
 #define EXPECTED_CRC 0x5A60861EU
 
@@ -21,7 +23,7 @@ int main(void)
 
     while (1)
     {
-        Green_LED_Toggle();
+        LED_Toggle();
 
         uint32_t crc = INITIAL_CRC_VALUE;
 
@@ -32,12 +34,12 @@ int main(void)
 
         if (crc != EXPECTED_CRC)
         {
-            Green_LED_Off();      /* indicate failure          */
+            LED_Off();      /* indicate failure          */
             while (1);
         }
 
         char msg[64];
-        sprintf(msg, "Software CRC time: %lu us\r\n", us);
+        printf(msg, "Software CRC time: %lu us\r\n", us);
         USART_Write(USART2, (uint8_t *)msg, strlen(msg));
 
         delay(1000);              /* one-second pause          */
