@@ -30,18 +30,29 @@ int main(void) {
 	UART2_Init();
 	USART_Init(USART2);
 	
-	while(1) {
-		// toggle LED
-		LED_Toggle();
-		// Compute the CRC of DataBuffer
-		// start timer
-		// reset CRC
-		// compute CRC
-		// stop timer
-		// if CRC doesn't match expected CRC, turn LED off, break
-		// print time to compute
-		// delay 1 second
-	}
+    while (1)
+    {
+        LED_Toggle();
+
+        startTimer();
+
+        CRC->CR |= CRC_CR_RESET;  /* restart CRC engine                       */
+        ComputedCRC = CRC_CalcBlockCRC(DataBuffer, BUFFER_SIZE);
+
+        uint32_t elapsed_us = endTimer();
+
+        if (ComputedCRC != EXPECTED_CRC)
+        {
+            LED_Off();            /* indicate failure and halt                */
+            while (1);
+        }
+
+        char msg[64];
+        sprintf(msg, "Hardware CRC time: %lu us\r\n", elapsed_us);
+        USART_Write(USART2, (uint8_t *)msg, strlen(msg));
+
+        delay(1000);              /* wait one second before next cycle        */
+    }
 }
 
 
