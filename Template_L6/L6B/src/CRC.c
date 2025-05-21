@@ -21,8 +21,10 @@ uint32_t CRC_CalcBlockCRC(const uint32_t * pBuffer, uint32_t BufferLength) {
 }	
 
 void CRC_Init(void) {
-	// Enable CRC clock 
-	// Default CRC Polynomial (CRC->POL): 0x04C1_1DB7
-	// Default initial CRC Value (CRC->INIT): 0xFFFF_FFFF
+    RCC->AHB1ENR  |= RCC_AHB1ENR_CRCEN;            /* enable peripheral clock */
+    CRC->CR        = CRC_CR_RESET;                 /* soft reset              */
+    CRC->POL       = CRC_POLY;                     /* generator polynomial    */
+    CRC->INIT      = CRC_INIT_VAL;                 /* starting value          */
+    CRC->CR       &= ~CRC_CR_POLYSIZE;             /* 00 → 32-bit polynomial  */
 }
 
