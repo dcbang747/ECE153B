@@ -48,7 +48,7 @@ void DMA1_Channel6_IRQHandler(void){
 	NVIC_ClearPendingIRQ(DMA1_Channel6_IRQn);					//clear nvic interrupt flag
 	if(DMA_ISR_TCIF6 == 1){
 		DMA1->IFCR |= DMA_IFCR_CTCIF6;									//check transfer complete interrupt flag
-		computationComplete;
+		completeCRC(CRC->DR);
 		
 	}
 	
