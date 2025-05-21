@@ -1,11 +1,3 @@
-/*
- * ECE 153B
- *
- * Name(s):
- * Section:
- * Lab: 6C
- */
-
 #include "UART.h"
 #include <stdio.h>
 
