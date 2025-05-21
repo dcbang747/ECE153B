@@ -13,9 +13,10 @@
 #include "CRC.h"
 #include "UART.h"
 #include <stdio.h>
+#include <string.h>
 
 /* Expected CRC Value */
-static uint32_t uwExpectedCRCValue = 0x5A60861E;	
+static uint32_t ExpectedCRCValue = 0x5A60861E;	
 
 int main(void) {
   static uint32_t ComputedCRC;
@@ -41,7 +42,7 @@ int main(void) {
 
         uint32_t elapsed_us = endTimer();
 
-        if (ComputedCRC != EXPECTED_CRC)
+        if (ComputedCRC != ExpectedCRCValue)
         {
             LED_Off();            /* indicate failure and halt                */
             while (1);
