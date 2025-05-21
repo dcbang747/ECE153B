@@ -3,25 +3,22 @@
  *
  * Name(s):
  * Section:
- * Lab: 6A
+ * Lab: 6C
  */
  
 #include "CRC.h"
 
 /**
-  * @brief  Algorithm implementation of the CRC
-  * @param  Crc: specifies the previous Crc data
-  * @param  Data: specifies the input data
-  * @retval Crc: the CRC result of the input data
+  * @brief  Computes the 32-bit CRC of a given buffer of data word(32-bit).
+  * @param  pBuffer: pointer to the buffer containing the data to be computed
+  * @param  BufferLength: length of the buffer to be computed					
+  * @retval 32-bit CRC
   */
+uint32_t CRC_CalcBlockCRC(const uint32_t * pBuffer, uint32_t BufferLength) {
+  //TODO
+	return 0;
+}	
 
-
-#include "CRC.h"
-
-uint32_t CrcSoftwareFunc(uint32_t Crc, uint32_t Data, uint32_t POLY)
-{
-    Crc ^= Data;                                         /* initial XOR     */
-    for (uint8_t i = 0; i < 32; ++i)
-        Crc = (Crc & 0x80000000UL) ? (Crc << 1) ^ POLY : (Crc << 1);
-    return Crc;
+void CRC_Init(void) {//TODO
 }
+

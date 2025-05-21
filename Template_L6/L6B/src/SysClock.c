@@ -1,15 +1,23 @@
+/*
+ * ECE 153B 
+ *
+ * Name(s):
+ * Section:
+ * Lab: 6B
+ */
+
 #include "SysClock.h"
 
-// ******************************************************************************************
+//-------------------------------------------------------------------------------------------
 // Switch the PLL source from MSI to HSI, and select the PLL as SYSCLK source.
-// ******************************************************************************************
+//-------------------------------------------------------------------------------------------
 void System_Clock_Init(void){
 	
 	uint32_t HSITrim;
 
 	// To correctly read data from FLASH memory, the number of wait states (LATENCY)
-	// must be correctly programmed according to the frequency of the CPU clock
-	// (HCLK) and the supply voltage of the device.		
+  // must be correctly programmed according to the frequency of the CPU clock
+  // (HCLK) and the supply voltage of the device.		
 	FLASH->ACR &= ~FLASH_ACR_LATENCY;
 	FLASH->ACR |=  FLASH_ACR_LATENCY_2WS;
 		
