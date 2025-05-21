@@ -57,6 +57,7 @@
   "C_Cpp_Runner.useLinkTimeOptimization": false,
   "C_Cpp_Runner.msvcSecureNoWarnings": false,
   "files.associations": {
-    "stm32l476xx.h": "c"
+    "stm32l476xx.h": "c",
+    "crc.h": "c"
   }
 }

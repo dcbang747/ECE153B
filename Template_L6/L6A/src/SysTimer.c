@@ -32,31 +32,33 @@ void SysTick_Init(void) {
 
 void SysTick_Handler(void)
 {
-    ++step;                                           /* one under-flow       */
+    ++step;
 }
 
 void delay(uint32_t ms)
 {
     step = 0;
-    SysTick->LOAD = (SYSTICK_CLK_HZ / 1000UL) - 1UL;  /* 1 ms period          */
+    SysTick->LOAD = (80000000UL / 1000UL) - 1UL;         /* 1 ms period     */
     SysTick->VAL  = 0;
-    SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;         /* start counting       */
-    while (step < ms) { __NOP(); }
-    SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;        /* stop                 */
+    SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
+    while (step < ms) __NOP();
+    SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
 }
 
 void startTimer(void)
 {
     step = 0;
-    SysTick->LOAD = 0x00FFFFFFUL;                     /* 24-bit max           */
+    SysTick->LOAD = 0x00FFFFFFUL;                        /* free-running    */
     SysTick->VAL  = 0;
-    SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;         /* run free             */
+    SysTick->CTRL |= SysTick_CTRL_ENABLE_Msk;
 }
 
 uint32_t endTimer(void)
 {
-    SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;        /* freeze               */
-    uint32_t ticks  = step * (SysTick->LOAD + 1UL) +
-                      (SysTick->LOAD - SysTick->VAL); /* elapsed core cycles  */
-    return ticks / 80UL;                              /* → µs (@80 MHz)       */
+    SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;           /* stop timing     */
+    uint32_t ticks = step * (SysTick->LOAD + 1UL) + (SysTick->LOAD - SysTick->VAL);
+    return ticks / 80UL;                                 /* 80 cycles = 1 µs*/
 }
+c
+Copy
+Edit

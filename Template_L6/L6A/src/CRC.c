@@ -15,18 +15,13 @@
   * @retval Crc: the CRC result of the input data
   */
 
-uint32_t CrcSoftwareFunc(uint32_t Initial_Crc,
-                         uint32_t Input_Data,
-                         uint32_t POLY)
-{
-    uint32_t Crc = Initial_Crc ^ Input_Data;          /* initial XOR          */
 
-    for (uint8_t bindex = 0; bindex < 32; ++bindex)
-    {
-        if (Crc & 0x80000000UL)
-            Crc = (Crc << 1) ^ POLY;
-        else
-            Crc <<= 1;
-    }
+#include "CRC.h"
+
+uint32_t CrcSoftwareFunc(uint32_t Crc, uint32_t Data, uint32_t POLY)
+{
+    Crc ^= Data;                                         /* initial XOR     */
+    for (uint8_t i = 0; i < 32; ++i)
+        Crc = (Crc & 0x80000000UL) ? (Crc << 1) ^ POLY : (Crc << 1);
     return Crc;
 }
