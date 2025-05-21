@@ -17,14 +17,17 @@
 uint32_t CRC_CalcBlockCRC(const uint32_t * pBuffer, uint32_t BufferLength) {
   uint32_t index = 0;
   // write all data into data register
-  return 0;  // read CRC from data register
+	for(int i=0;i<BufferLength;i++){
+		CRC->DR = pBuffer[i];
+	}
+  return CRC->DR;  // read CRC from data register
 }	
 
 void CRC_Init(void) {
     RCC->AHB1ENR  |= RCC_AHB1ENR_CRCEN;            /* enable peripheral clock */
     CRC->CR        = CRC_CR_RESET;                 /* soft reset              */
-    CRC->POL       = CRC_POLY;                     /* generator polynomial    */
-    CRC->INIT      = CRC_INIT_VAL;                 /* starting value          */
+    CRC->POL       = 0x104C11DB7;                     /* generator polynomial    */
+    CRC->INIT      = CRC_INIT_INIT;                 /* starting value          */
     CRC->CR       &= ~CRC_CR_POLYSIZE;             /* 00 → 32-bit polynomial  */
 }
 
