@@ -9,49 +9,44 @@
 #include "DMA.h"
 #include "CRC.h"
 
-void DMA_Init(void) {
-	//TODO
-	RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;		//enable dma clock
-	for (volatile uint32_t i = 0; i<1600; ++i) __NOP(); /* = 20 us @80Mhz*/
-	
-	DMA1_Channel6->CCR &= ~DMA_CCR_EN;			 //disable channel 6 
-	DMA1_Channel6->CCR |=DMA_CCR_MEM2MEM;		 //set to memory to memeory mode
-	DMA1_Channel6->CCR &= ~DMA_CCR_PL;
-	DMA1_Channel6->CCR |= DMA_CCR_PL_1;			 //chanel priopority to high
-	DMA1_Channel6->CCR |= DMA_CCR_PSIZE_1;   //set chanel to 32 bit
-	DMA1_Channel6->CCR &= ~DMA_CCR_PSIZE_0;  // ditto
-	
-	DMA1_Channel6->CCR &= ~DMA_CCR_MSIZE;		 //set memory to size 32
-	DMA1_Channel6->CCR |= DMA_CCR_MSIZE_1;
-	DMA1_Channel6->CCR &= ~DMA_CCR_PINC;		 //disable perphial increment
-	DMA1_Channel6->CCR &= ~DMA_CCR_MINC;		 //diable memory increment
-	
-	DMA1_Channel6->CCR &= ~DMA_CCR_CIRC; 		 //disable circular mode
-	DMA1_Channel6->CCR |= DMA_CCR_DIR;			 //read from memory, data direction is memory to periphal
-	
-	DMA1_Channel6->CMAR = (uint32_t)DataBuffer; //source
-	DMA1_Channel6->CPAR = (uint32_t)&CRC->DR; 						// Destination
-	
-	//todo, set data source to data buffer/ set data destination to data register of CRC block
-	
-	DMA1_Channel6->CCR &= ~DMA_CCR_HTIE;							//disable channel 6 half transfer interrupt
-	DMA1_Channel6->CCR &= ~DMA_CCR_TEIE;							//Disable transfer error interrupt
-	DMA1_Channel6->CCR |= DMA_CCR_TCIE;								//enable transfer complete interrupt
+void DMA_Init(void)
+{
+    /* 1 – 2  enable DMA1 and give the hardware 20 µs to settle                */
+    RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
+    for (volatile uint32_t i = 0; i < 1600; ++i) __NOP();   /* ≈20 µs @80 MHz   */
 
-	NVIC_SetPriority(DMA1_Channel6_IRQn, 0);					//set interrpt priority to 0
-	NVIC_EnableIRQ(DMA1_Channel6_IRQn);								//enable interrput in nvic
-	
+    /* 3 – 11  configure Channel 6 exactly as required                         */
+    DMA1_Channel6->CCR &= ~DMA_CCR_EN;                      /* channel off     */
+    DMA1_Channel6->CCR  = 0;                                /* clear all bits  */
+    DMA1_Channel6->CCR |= DMA_CCR_MEM2MEM;                  /* mem-to-mem mode */
+    DMA1_Channel6->CCR |= DMA_CCR_PL_1;                     /* high priority   */
+    DMA1_Channel6->CCR |= DMA_CCR_PSIZE_1;                  /* 32-bit periph   */
+    DMA1_Channel6->CCR |= DMA_CCR_MSIZE_1;                  /* 32-bit memory   */
+    DMA1_Channel6->CCR &= ~DMA_CCR_PINC;                    /* no PINC         */
+    DMA1_Channel6->CCR |= DMA_CCR_MINC;                     /* memory INC      */
+    DMA1_Channel6->CCR &= ~DMA_CCR_CIRC;                    /* no circular     */
+    DMA1_Channel6->CCR |= DMA_CCR_DIR;                      /* mem→periph dir  */
+
+    /* 12 – 13  set addresses                                                  */
+    DMA1_Channel6->CMAR = (uint32_t)DataBuffer;             /* source          */
+    DMA1_Channel6->CPAR = (uint32_t)&CRC->DR;               /* destination     */
+
+    /* 14 – 18  interrupt setup                                                */
+    DMA1_Channel6->CCR &= ~(DMA_CCR_HTIE | DMA_CCR_TEIE);   /* HT, TE off      */
+    DMA1_Channel6->CCR |=  DMA_CCR_TCIE;                    /* TC on           */
+    NVIC_SetPriority(DMA1_Channel6_IRQn, 0);
+    NVIC_EnableIRQ(DMA1_Channel6_IRQn);
 }
 
-void DMA1_Channel6_IRQHandler(void){ 
-	// TODO
-	NVIC_ClearPendingIRQ(DMA1_Channel6_IRQn);					//clear nvic interrupt flag
-	if(DMA_ISR_TCIF6 == 1){
-		DMA1->IFCR |= DMA_IFCR_CTCIF6;									//check transfer complete interrupt flag
-		completeCRC(CRC->DR);
-		
-	}
-	
-	DMA1->IFCR |= DMA_IFCR_CGIF6;											//clear global dma interrupt flag
-}
+void DMA1_Channel6_IRQHandler(void)
+{
+    NVIC_ClearPendingIRQ(DMA1_Channel6_IRQn);
 
+    if (DMA1->ISR & DMA_ISR_TCIF6)                          /* xfer complete   */
+    {
+        DMA1->IFCR = DMA_IFCR_CTCIF6;                       /* clear TC flag   */
+        completeCRC(CRC->DR);                               /* hand result up  */
+    }
+
+    DMA1->IFCR = DMA_IFCR_CGIF6;                            /* clear global    */
+}
