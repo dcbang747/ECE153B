@@ -58,7 +58,7 @@ int main(void) {
 		
         uint32_t elapsed_us = endTimer();
 
-        if (ComputedCRC != EXPECTED_CRC)
+        if (ComputedCRC != uwExpectedCRCValue)
         {
             LED_Off();            /* indicate failure and halt                */
             while (1);

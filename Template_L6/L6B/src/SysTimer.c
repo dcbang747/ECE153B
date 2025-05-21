@@ -56,7 +56,7 @@ void startTimer(void)
 uint32_t endTimer(void)
 {
     SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;           /* stop timing     */
-    uint32_t ticks = step * (SysTick->LOAD + 1UL) + (SysTick->LOAD - SysTick->VAL);
+    uint32_t ticks = (SysTick->LOAD - SysTick->VAL);
     return ticks / 80UL;                                 /* 80 cycles = 1 µs*/
 }
 

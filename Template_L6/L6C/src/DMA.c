@@ -12,7 +12,7 @@
 void DMA_Init(void) {
 	//TODO
 	RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;		//enable dma clock
-	delay(20);
+	for (volatile uint32_t i = 0; i<1600; ++i) __NOP(); /* = 20 us @80Mhz*/
 	
 	DMA1_Channel6->CCR &= ~DMA_CCR_EN;			 //disable channel 6 
 	DMA1_Channel6->CCR |=DMA_CCR_MEM2MEM;		 //set to memory to memeory mode
