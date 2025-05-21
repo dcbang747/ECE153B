@@ -46,7 +46,7 @@ int main(void) {
         LED_Toggle();
 
         startTimer();
-		ComputationDone = 0;
+				ComputationDone = 0;
 
         CRC->CR |= CRC_CR_RESET;  /* restart CRC engine                       */
         DMA1_Channel6->CNDTR = BUFFER_SIZE;                       /* word count */
@@ -68,7 +68,7 @@ int main(void) {
         sprintf(msg, "Hardware CRC time: %lu us\r\n", elapsed_us);
         USART_Write(USART2, (uint8_t *)msg, strlen(msg));
 
-        delay(1000);              /* wait one second before next cycle        */
+        //delay(1000);              /* wait one second before next cycle        */
     }
 }
 
