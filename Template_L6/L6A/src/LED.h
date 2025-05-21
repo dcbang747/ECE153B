@@ -1,20 +1,12 @@
-/*
- * ECE 153B
- *
- * Name(s):
- * Section:
- * Lab: 6A
- */
-
-#ifndef __STM32L476G_DISCOVERY_LED_H
-#define __STM32L476G_DISCOVERY_LED_H
+#ifndef __STM32L476R_NUCLEO_LED_H
+#define __STM32L476R_NUCLEO_LED_H
 
 #include "stm32l476xx.h"
 
 void LED_Init(void);
 
-void LED_Off(void);
-void LED_On(void);
-void LED_Toggle(void);
+void Green_LED_Off(void);
+void Green_LED_On(void);
+void Green_LED_Toggle(void);
 
-#endif /* __STM32L476G_DISCOVERY_LED_H */
+#endif

@@ -23,18 +23,18 @@ void LED_Init(void) {
 	GPIOA->PUPDR &= ~GPIO_PUPDR_PUPD5; // No Pull up/pull down
 }
 
-void LED_Off(void) {
+void Green_LED_Off(void) {
 	// [TODO]
 	GPIOA->ODR &= ~GPIO_ODR_OD5;
 	
 }
 
-void LED_On(void) {
+void Green_LED_On(void) {
 	// [TODO]
 	GPIOA->ODR |= GPIO_ODR_OD5;
 }
 
-void LED_Toggle(void) {
+void Green_LED_Toggle(void) {
 	// [TODO]
 	GPIOA->ODR ^= GPIO_ODR_OD5;
 }

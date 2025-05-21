@@ -1,11 +1,3 @@
-/*
- * ECE 153B
- *
- * Name(s):
- * Section:
- * Lab: 6A
- */
-
 #ifndef __STM32L476R_NUCLEO_UART_H
 #define __STM32L476R_NUCLEO_UART_H
 
