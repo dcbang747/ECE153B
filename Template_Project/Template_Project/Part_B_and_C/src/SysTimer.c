@@ -5,11 +5,13 @@
  * Section:
  * Project
  */
-
+ 
 #include "SysTimer.h"
 #include "motor.h"
 
 static uint32_t volatile step;
+#define T_MIN_MS   2u              /* experimentally measured minimum delay */
+static volatile uint32_t tickCnt = 0;
 
 void SysTick_Init(void) {
 	// SysTick Control & Status Register
@@ -35,10 +37,19 @@ void SysTick_Init(void) {
 	NVIC_SetPriority(SysTick_IRQn, 1); // Set Priority to 1
 }
 
-void SysTick_Handler(void) {
-	//TODO
+void SysTick_Handler(void)
+{
+    if (++tickCnt >= T_MIN_MS) {   /* call rotate() every T_MIN_MS ms      */
+        tickCnt = 0;
+        rotate();
+    }
 }
 
-void delay(uint32_t ms) {
-	//TODO
+void delay(uint32_t ms)
+/* simple cooperative delay that keeps IRQs running                        */
+{
+    uint32_t start = tickCnt;
+    while ((tickCnt - start) < ms) {
+        __WFI();                   /* sleep until next interrupt           */
+    }
 }

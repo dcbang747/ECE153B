@@ -1,5 +1,7 @@
 #include "I2C.h"
 
+extern void Error_Handler(void);
+
 // Inter-integrated Circuit Interface (I2C)
 // up to 100 Kbit/s in the standard mode, 
 // up to 400 Kbit/s in the fast mode, and 
@@ -13,8 +15,28 @@
 //===============================================================================
 //                        I2C GPIO Initialization
 //===============================================================================
-void I2C_GPIO_Init(void) {
-	//TODO
+void I2C_GPIO_Init(void)
+{
+    /* Enable GPIOB clock */
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+
+    /* PB6 & PB7 → Alternate‑function mode */
+    GPIOB->MODER  &= ~(GPIO_MODER_MODE6 | GPIO_MODER_MODE7);
+    GPIOB->MODER  |=  (GPIO_MODER_MODE6_1 | GPIO_MODER_MODE7_1);
+
+    /* Open‑drain */
+    GPIOB->OTYPER |= GPIO_OTYPER_OT6 | GPIO_OTYPER_OT7;
+
+    /* Very‑high speed */
+    GPIOB->OSPEEDR |= (3U << (6 * 2)) | (3U << (7 * 2));
+
+    /* Pull‑ups */
+    GPIOB->PUPDR  &= ~(GPIO_PUPDR_PUPD6 | GPIO_PUPDR_PUPD7);
+    GPIOB->PUPDR  |=  (GPIO_PUPDR_PUPD6_0 | GPIO_PUPDR_PUPD7_0);
+
+    /* AF4 for I²C1 */
+    GPIOB->AFR[0] &= ~((0xF << (6 * 4)) | (0xF << (7 * 4)));
+    GPIOB->AFR[0] |=  (4U << (6 * 4)) | (4U << (7 * 4));
 }
 	
 #define I2C_TIMINGR_PRESC_POS	28
@@ -23,18 +45,65 @@ void I2C_GPIO_Init(void) {
 #define I2C_TIMINGR_SCLH_POS	8
 #define I2C_TIMINGR_SCLL_POS	0
 
+#define PRESC   7U     // Prescaler = 7 ? 10 MHz I2C clock
+#define SCLDEL  9U     // 1000 ns (tSCLDEL = (9+1)*100ns = 1000ns)
+#define SDADEL  12U    // 1250 ns (tSDADEL = (12+1)*100ns = 1300ns > 1250ns)
+#define SCLH    39U    // 4.0 �s (40 * 100ns)
+#define SCLL    46U    // 4.7 �s (47 * 100ns)
+
 //===============================================================================
 //                          I2C Initialization
 //===============================================================================
-void I2C_Initialization(void){
-	uint32_t const OwnAddr = 0x52;
-	//TODO
-}
+void I2C_Initialization(void)
+{
+    uint32_t OwnAddr = 0x52;          /* arbitrary 7‑bit node address */
 
+    /* 1.  Clocking */
+    RCC->APB1ENR1 |= RCC_APB1ENR1_I2C1EN;      /* enable peripheral clk     */
+
+    /* Select SYSCLK (80 MHz) for I2C1SEL bits [13:12] = 01                   */
+    RCC->CCIPR &= ~(3U << 12);
+    RCC->CCIPR |=  (1U << 12);
+
+    /* Reset then release I²C1                                                */
+    RCC->APB1RSTR1 |=  RCC_APB1RSTR1_I2C1RST;
+    RCC->APB1RSTR1 &= ~RCC_APB1RSTR1_I2C1RST;
+
+    /* 2.  Configure registers (while PE = 0)                                */
+    I2C1->CR1 &= ~I2C_CR1_PE;                         /* disable peripheral  */
+
+    /* Enable analog filter (ANFOFF=0), disable digital filter (DNF=0),
+       enable error interrupts and clock stretching, 7‑bit addr mode.        */
+    I2C1->CR1 |= I2C_CR1_ERRIE;                       /* error IRQ enable    */
+    I2C1->CR1 &= ~I2C_CR1_ANFOFF;                     /* analog filter on    */
+    I2C1->CR1 &= ~I2C_CR1_NOSTRETCH;                  /* clock stretching    */
+    I2C1->CR1 &= ~I2C_CR1_DNF;                        /* digital filter 0    */
+
+    /* Automatic STOP and NACK generation (helps simple master‑Rx)           */
+    I2C1->CR2 |= I2C_CR2_AUTOEND;
+    I2C1->CR2 |= I2C_CR2_NACK;
+
+    /* 3.  Timing register (meets TC74 spec at ~100 kHz)                     */
+    I2C1->TIMINGR =
+          (PRESC  << I2C_TIMINGR_PRESC_POS) |
+          (SCLDEL << I2C_TIMINGR_SCLDEL_POS) |
+          (SDADEL << I2C_TIMINGR_SDADEL_POS) |
+          (SCLH   << I2C_TIMINGR_SCLH_POS) |
+          (SCLL   << I2C_TIMINGR_SCLL_POS);
+
+    /* 4.  Own‑address 1                                                     */
+    I2C1->OAR1 &= ~I2C_OAR1_OA1EN;                    /* disable first       */
+    I2C1->OAR1 &= ~I2C_OAR1_OA1MODE;                  /* 7‑bit mode          */
+    I2C1->OAR1  = (I2C1->OAR1 & ~0x7F) | (OwnAddr & 0x7F) << 1;
+    I2C1->OAR1 |= I2C_OAR1_OA1EN;                     /* enable              */
+
+    /* 5.  Enable I²C peripheral                                             */
+    I2C1->CR1 |= I2C_CR1_PE;
+}
 //===============================================================================
 //                           I2C Start
 // Master generates START condition:
-//    -- Slave address: 7 bits
+//    -- Secondary address: 7 bits
 //    -- Automatically generate a STOP condition after all bytes have been transmitted 
 // Direction = 0: Master requests a write transfer
 // Direction = 1: Master requests a read transfer
@@ -52,10 +121,10 @@ int8_t I2C_Start(I2C_TypeDef * I2Cx, uint32_t DevAddress, uint8_t Size, uint8_t 
 	
 	tmpreg &= (uint32_t)~((uint32_t)(I2C_CR2_SADD | I2C_CR2_NBYTES | I2C_CR2_RELOAD | I2C_CR2_AUTOEND | I2C_CR2_RD_WRN | I2C_CR2_START | I2C_CR2_STOP));
 	
-	if (Direction == READ_FROM_SLAVE)
-		tmpreg |= I2C_CR2_RD_WRN;  // Read from Slave
+	if (Direction == READ_FROM_SECONDARY)
+		tmpreg |= I2C_CR2_RD_WRN;  // Read from Secondary
 	else
-		tmpreg &= ~I2C_CR2_RD_WRN; // Write to Slave
+		tmpreg &= ~I2C_CR2_RD_WRN; // Write to Secondary
 		
 	tmpreg |= (uint32_t)(((uint32_t)DevAddress & I2C_CR2_SADD) | (((uint32_t)Size << 16 ) & I2C_CR2_NBYTES));
 	
@@ -94,7 +163,7 @@ int8_t I2C_SendData(I2C_TypeDef * I2Cx, uint8_t DeviceAddress, uint8_t *pData, u
 	
 	I2C_WaitLineIdle(I2Cx);
 	
-	if (I2C_Start(I2Cx, DeviceAddress, Size, WRITE_TO_SLAVE) < 0 ) return -1;
+	if (I2C_Start(I2Cx, DeviceAddress, Size, WRITE_TO_SECONDARY) < 0 ) return -1;
 
 	// Send Data
 	// Write the first data in DR register
@@ -134,7 +203,7 @@ int8_t I2C_ReceiveData(I2C_TypeDef * I2Cx, uint8_t DeviceAddress, uint8_t *pData
 
 	I2C_WaitLineIdle(I2Cx);
 
-	I2C_Start(I2Cx, DeviceAddress, Size, READ_FROM_SLAVE); // 0 = sending data to the slave, 1 = receiving data from the slave
+	I2C_Start(I2Cx, DeviceAddress, Size, READ_FROM_SECONDARY); // 0 = sending data to the secondary, 1 = receiving data from the secondary.
 						  	
 	for (i = 0; i < Size; i++) {
 		// Wait until RXNE flag is set 	
