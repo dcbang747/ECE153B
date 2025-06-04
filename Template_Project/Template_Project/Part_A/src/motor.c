@@ -1,95 +1,89 @@
 /*
  * ECE 153B – Project Part A
- * GPIOC5, 6, 8, 9 half-step driver (non-blocking)
+ * Non-blocking half-step step-motor driver (GPIOC 5, 6, 8, 9)
  *
- * Pin map (ULN2003 → NEMA-17 coils):
+ * Pin map (ULN2003 → NEMA-17):
  *   IN1 → PC5   IN2 → PC6   IN3 → PC8   IN4 → PC9
  *
- *  dire :  +1 = CW   –1 = CCW   0 = stop
+ *  dire:  +1 = clockwise   -1 = counter-clockwise   0 = stop
+ *
+ *  HalfStep[] is listed in CCW order; stepping “backwards”
+ *  (idx – dire) therefore yields CW when dire = +1.
  */
 
 #include "stm32l476xx.h"
 #include "motor.h"
 
-/* ────────────────────── GPIO helpers ────────────────────── */
-#define P1_PIN      5u
-#define P2_PIN      6u
-#define P3_PIN      8u
-#define P4_PIN      9u
+/* ---- GPIO bit helpers -------------------------------------------------- */
+#define COIL1  GPIO_ODR_OD5
+#define COIL2  GPIO_ODR_OD6
+#define COIL3  GPIO_ODR_OD8
+#define COIL4  GPIO_ODR_OD9
+#define COIL_MASK  (COIL1 | COIL2 | COIL3 | COIL4)
 
-#define P1_BIT      (1u << P1_PIN)      /* GPIO_ODR bit for PC5  */
-#define P2_BIT      (1u << P2_PIN)      /* GPIO_ODR bit for PC6  */
-#define P3_BIT      (1u << P3_PIN)      /* GPIO_ODR bit for PC8  */
-#define P4_BIT      (1u << P4_PIN)      /* GPIO_ODR bit for PC9  */
+/* Mask with 0 s on motor pins – used to clear those bits quickly           */
+static const uint32_t CLEAR_MASK = ~COIL_MASK;
 
-#define COIL_MASK   (P1_BIT | P2_BIT | P3_BIT | P4_BIT)
-#define CLEAR_MASK  (~COIL_MASK)
-
-/* ────────────────── 8-step half-step table (CCW order) ────────────────── */
+/* 8-step half-stepping table ( **clockwise** order )               */
 static const uint32_t HalfStep[8] = {
-    P1_BIT | P4_BIT,  /* 1001 */
-    P1_BIT,           /* 1000 */
-    P1_BIT | P3_BIT,  /* 1100 */
-    P3_BIT,           /* 0100 */
-    P2_BIT | P3_BIT,  /* 0110 */
-    P2_BIT,           /* 0010 */
-    P2_BIT | P4_BIT,  /* 0011 */
-    P4_BIT            /* 0001 */
+    P1_BIT,                       /* 1) A           */
+    P1_BIT | P4_BIT,              /* 2) A  + B′     */
+    P4_BIT,                       /* 3)      B′     */
+    P4_BIT | P2_BIT,              /* 4) B′ + A′     */
+    P2_BIT,                       /* 5)      A′     */
+    P2_BIT | P3_BIT,              /* 6) A′ + B      */
+    P3_BIT,                       /* 7)      B      */
+    P3_BIT | P1_BIT               /* 8) B  + A      */
 };
 
-/* ───────────────────────── driver state ───────────────────────── */
-static volatile int8_t dire = 0;      /* +1 CW, –1 CCW, 0 stop    */
-static volatile uint8_t step = 0;     /* index in HalfStep[]      */
+/* ---- driver state ------------------------------------------------------ */
+static volatile int8_t dire = 0;   /* +1 CW, -1 CCW, 0 stop                */
+static volatile int8_t step = 0;   /* current index in HalfStep[]          */
 
-/* ───────────────────────── API functions ─────────────────────── */
+/* ---- public API -------------------------------------------------------- */
 void Motor_Init(void)
 {
     /* Enable GPIOC clock */
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
 
-    /* ---- MODER:   01 (general-purpose output) ---- */
-    GPIOC->MODER &=
-        ~((3u << (P1_PIN*2)) | (3u << (P2_PIN*2)) |
-          (3u << (P3_PIN*2)) | (3u << (P4_PIN*2)));
-    GPIOC->MODER |=
-        (1u << (P1_PIN*2)) | (1u << (P2_PIN*2)) |
-        (1u << (P3_PIN*2)) | (1u << (P4_PIN*2));
+    /* PC5,6,8,9 → general-purpose output (01) */
+    GPIOC->MODER &= ~(GPIO_MODER_MODE5_Msk | GPIO_MODER_MODE6_Msk |
+                      GPIO_MODER_MODE8_Msk | GPIO_MODER_MODE9_Msk);
+    GPIOC->MODER |=  (GPIO_MODER_MODE5_0 | GPIO_MODER_MODE6_0 |
+                      GPIO_MODER_MODE8_0 | GPIO_MODER_MODE9_0);
 
-    /* ---- OTYPER: push-pull (reset state = 0) ---- */
-    GPIOC->OTYPER &=
-        ~((1u << P1_PIN) | (1u << P2_PIN) |
-          (1u << P3_PIN) | (1u << P4_PIN));
+    /* Push-pull, fast speed */
+    GPIOC->OTYPER  &= ~(GPIO_OTYPER_OT5 | GPIO_OTYPER_OT6 |
+                        GPIO_OTYPER_OT8 | GPIO_OTYPER_OT9);
 
-    /* ---- OSPEEDR: 10 (fast) ---- */
-    GPIOC->OSPEEDR &=
-        ~((3u << (P1_PIN*2)) | (3u << (P2_PIN*2)) |
-          (3u << (P3_PIN*2)) | (3u << (P4_PIN*2)));
-    GPIOC->OSPEEDR |=
-        (2u << (P1_PIN*2)) | (2u << (P2_PIN*2)) |
-        (2u << (P3_PIN*2)) | (2u << (P4_PIN*2));
+    GPIOC->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED5_Msk | GPIO_OSPEEDR_OSPEED6_Msk |
+                        GPIO_OSPEEDR_OSPEED8_Msk | GPIO_OSPEEDR_OSPEED9_Msk);
+    GPIOC->OSPEEDR |=  (GPIO_OSPEEDR_OSPEED5_1 | GPIO_OSPEEDR_OSPEED6_1 |
+                        GPIO_OSPEEDR_OSPEED8_1 | GPIO_OSPEEDR_OSPEED9_1);
 
-    /* ---- PUPDR: 00 (no pull) ---- */
-    GPIOC->PUPDR &=
-        ~((3u << (P1_PIN*2)) | (3u << (P2_PIN*2)) |
-          (3u << (P3_PIN*2)) | (3u << (P4_PIN*2)));
+    /* No pull-ups / pull-downs */
+    GPIOC->PUPDR  &= ~(GPIO_PUPDR_PUPD5_Msk | GPIO_PUPDR_PUPD6_Msk |
+                       GPIO_PUPDR_PUPD8_Msk | GPIO_PUPDR_PUPD9_Msk);
 
-    /* Make sure the coils are de-energised */
+    /* Ensure coils are de-energised */
     GPIOC->ODR &= ~COIL_MASK;
 }
 
-void rotate(void)             /* Called from SysTick – keep it tiny */
+void rotate(void)
+/* Called from SysTick — must be **very** fast                              */
 {
     if (dire == 0) {
-        return;               /* motor stopped                      */
+        return;                         /* motor stopped                    */
     }
 
-    /* HalfStep[] is CCW; subtracting dire performs CW when dire = +1 */
-    step = (uint8_t)((step - dire) & 0x07);
-
+    /* Update index: HalfStep is CCW, so “-dire” moves CW when dire = +1    */
+    step = (uint8_t)((step + dire + 8) & 0x07);   // +1 = CW, –1 = CCW
+    /* Output next pattern */
     GPIOC->ODR = (GPIOC->ODR & CLEAR_MASK) | HalfStep[step];
 }
 
-void setDire(int8_t direction)   /* direction ∈ {–1, 0, +1} */
+void setDire(int8_t direction)
+/* direction ∈ {-1, 0, +1}                                                  */
 {
     dire = direction;
 }
