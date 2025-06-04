@@ -1,0 +1,117 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: µVision V5.42.0.0
+Copyright (C) 2025 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: Denik Maharjan, dmaharjan@ucsb.edu, LIC=----
+ 
+Tool Versions:
+Toolchain:       MDK-Lite  Version: 5.42.0.0
+Toolchain Path:  C:\Users\denik\AppData\Local\Keil_v5\ARM\ARMCLANG\Bin
+C Compiler:      ArmClang.exe V6.23
+Assembler:       Armasm.exe V6.23
+Linker/Locator:  ArmLink.exe V6.23
+Library Manager: ArmAr.exe V6.23
+Hex Converter:   FromElf.exe V6.23
+CPU DLL:         SARMCM3.DLL V5.42.0.0
+Dialog DLL:      DCM.DLL V1.17.5.0
+Target DLL:      STLink\ST-LINKIII-KEIL_SWO.dll V3.3.0.0
+Dialog DLL:      TCM.DLL V1.56.6.0
+ 
+<h2>Project:</h2>
+C:\Users\denik\OneDrive\Documents\GitHub\ECE153B\Template_Project\Template_Project\Part_A\project.uvprojx
+Project File Date:  06/04/2025
+
+<h2>Output:</h2>
+*** Using Compiler 'V6.23', folder: 'C:\Users\denik\AppData\Local\Keil_v5\ARM\ARMCLANG\Bin'
+Build target 'Target 1'
+src/SysTimer.c(12): warning: unused variable 'step' [-Wunused-variable]
+   12 | static uint32_t volatile step;
+      |                          ^~~~
+1 warning generated.
+compiling SysTimer.c...
+compiling SysClock.c...
+src/UART_printf.c(14): warning: unused parameter 'f' [-Wunused-parameter]
+   14 | int fputc(int ch, FILE *f) { 
+      |                         ^
+src/UART_printf.c(23): warning: unused parameter 'f' [-Wunused-parameter]
+   23 | int fgetc(FILE *f) {  
+      |                 ^
+2 warnings generated.
+compiling UART_printf.c...
+src/UART.c(118): warning: comparison of integers of different signs: 'int' and 'uint32_t' (aka 'unsigned int') [-Wsign-compare]
+  118 |         for (i = 0; i < nBytes; i++) {
+      |                     ~ ^ ~~~~~~
+src/UART.c(8): warning: unused function 'computeBRR' [-Wunused-function]
+    8 |  static uint32_t computeBRR(uint32_t periph_clk, uint32_t baud)
+      |                  ^~~~~~~~~~
+2 warnings generated.
+compiling UART.c...
+compiling main.c...
+src/motor.c(50): error: use of undeclared identifier 'GPIO_MODER_MODE5_Msk'
+   50 |     GPIOC->MODER &= ~(GPIO_MODER_MODE5_Msk | GPIO_MODER_MODE6_Msk |
+      |                       ^
+src/motor.c(50): error: use of undeclared identifier 'GPIO_MODER_MODE6_Msk'
+   50 |     GPIOC->MODER &= ~(GPIO_MODER_MODE5_Msk | GPIO_MODER_MODE6_Msk |
+      |                                              ^
+src/motor.c(51): error: use of undeclared identifier 'GPIO_MODER_MODE8_Msk'
+   51 |                       GPIO_MODER_MODE8_Msk | GPIO_MODER_MODE9_Msk);
+      |                       ^
+src/motor.c(51): error: use of undeclared identifier 'GPIO_MODER_MODE9_Msk'
+   51 |                       GPIO_MODER_MODE8_Msk | GPIO_MODER_MODE9_Msk);
+      |                                              ^
+src/motor.c(59): error: use of undeclared identifier 'GPIO_OSPEEDR_OSPEED5_Msk'
+   59 |     GPIOC->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED5_Msk | GPIO_OSPEEDR_OSPEED6_Msk |
+      |                         ^
+src/motor.c(59): error: use of undeclared identifier 'GPIO_OSPEEDR_OSPEED6_Msk'
+   59 |     GPIOC->OSPEEDR &= ~(GPIO_OSPEEDR_OSPEED5_Msk | GPIO_OSPEEDR_OSPEED6_Msk |
+      |                                                    ^
+src/motor.c(60): error: use of undeclared identifier 'GPIO_OSPEEDR_OSPEED8_Msk'
+   60 |                         GPIO_OSPEEDR_OSPEED8_Msk | GPIO_OSPEEDR_OSPEED9_Msk);
+      |                         ^
+src/motor.c(60): error: use of undeclared identifier 'GPIO_OSPEEDR_OSPEED9_Msk'
+   60 |                         GPIO_OSPEEDR_OSPEED8_Msk | GPIO_OSPEEDR_OSPEED9_Msk);
+      |                                                    ^
+src/motor.c(65): error: use of undeclared identifier 'GPIO_PUPDR_PUPD5_Msk'
+   65 |     GPIOC->PUPDR  &= ~(GPIO_PUPDR_PUPD5_Msk | GPIO_PUPDR_PUPD6_Msk |
+      |                        ^
+src/motor.c(65): error: use of undeclared identifier 'GPIO_PUPDR_PUPD6_Msk'
+   65 |     GPIOC->PUPDR  &= ~(GPIO_PUPDR_PUPD5_Msk | GPIO_PUPDR_PUPD6_Msk |
+      |                                               ^
+src/motor.c(66): error: use of undeclared identifier 'GPIO_PUPDR_PUPD8_Msk'
+   66 |                        GPIO_PUPDR_PUPD8_Msk | GPIO_PUPDR_PUPD9_Msk);
+      |                        ^
+src/motor.c(66): error: use of undeclared identifier 'GPIO_PUPDR_PUPD9_Msk'
+   66 |                        GPIO_PUPDR_PUPD8_Msk | GPIO_PUPDR_PUPD9_Msk);
+      |                                               ^
+12 errors generated.
+compiling motor.c...
+".\Objects\project.axf" - 12 Error(s), 5 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                https://www.keil.com/pack/ARM.CMSIS.6.1.0.pack
+                ARM::CMSIS@6.1.0
+                CMSIS (Common Microcontroller Software Interface Standard)
+   * Component: CORE Version: 6.1.0
+
+Package Vendor: Keil
+                https://www.keil.com/pack/Keil.STM32L4xx_DFP.3.0.0.pack
+                Keil::STM32L4xx_DFP@3.0.0
+                STMicroelectronics STM32L4 Series Device Support
+
+<h2>Collection of Component include folders:</h2>
+  ./RTE/_Target_1
+  C:/Users/denik/AppData/Local/Arm/Packs/ARM/CMSIS/6.1.0/CMSIS/Core/Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE@6.1.0
+Target not created.
+Build Time Elapsed:  00:00:01
+</pre>
+</body>
+</html>
