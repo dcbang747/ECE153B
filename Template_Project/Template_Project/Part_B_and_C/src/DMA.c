@@ -1,52 +1,64 @@
 /*
- * ECE 153B
+ * ECE 153B – DMA initialisation for UART-TX
  *
- * Name(s):
- * Section:
- * Lab: 6C
+ *  ‣ USART2_TX  → DMA1 Channel-7
+ *  ‣ USART1_TX  → DMA1 Channel-4  (not used by default but ready)
+ *
+ * Only memory-to-peripheral transfers are needed, 8-bit, MINC, TC interrupt.
  */
- 
 #include "DMA.h"
-#include "CRC.h"
 
-void DMA_Init(void)
+static inline uint32_t chan_index(DMA_Channel_TypeDef *ch)
 {
-    /* 1 – 2  enable DMA1 and give the hardware 20 µs to settle                */
-    RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN;
-    for (volatile uint32_t i = 0; i < 1600; ++i) __NOP();   /* ≈20 µs @80 MHz   */
-
-    /* 3 – 11  configure Channel 6 exactly as required                         */
-    DMA1_Channel6->CCR &= ~DMA_CCR_EN;                      /* channel off     */
-    DMA1_Channel6->CCR  = 0;                                /* clear all bits  */
-    DMA1_Channel6->CCR |= DMA_CCR_MEM2MEM;                  /* mem-to-mem mode */
-    DMA1_Channel6->CCR |= DMA_CCR_PL_1;                     /* high priority   */
-    DMA1_Channel6->CCR |= DMA_CCR_PSIZE_1;                  /* 32-bit periph   */
-    DMA1_Channel6->CCR |= DMA_CCR_MSIZE_1;                  /* 32-bit memory   */
-    DMA1_Channel6->CCR &= ~DMA_CCR_PINC;                    /* no PINC         */
-    DMA1_Channel6->CCR |= DMA_CCR_MINC;                     /* memory INC      */
-    DMA1_Channel6->CCR &= ~DMA_CCR_CIRC;                    /* no circular     */
-    DMA1_Channel6->CCR |= DMA_CCR_DIR;                      /* mem→periph dir  */
-
-    /* 12 – 13  set addresses                                                  */
-    DMA1_Channel6->CMAR = (uint32_t)DataBuffer;             /* source          */
-    DMA1_Channel6->CPAR = (uint32_t)&CRC->DR;               /* destination     */
-
-    /* 14 – 18  interrupt setup                                                */
-    DMA1_Channel6->CCR &= ~(DMA_CCR_HTIE | DMA_CCR_TEIE);   /* HT, TE off      */
-    DMA1_Channel6->CCR |=  DMA_CCR_TCIE;                    /* TC on           */
-    NVIC_SetPriority(DMA1_Channel6_IRQn, 0);
-    NVIC_EnableIRQ(DMA1_Channel6_IRQn);
+    return ((uint32_t)ch - (uint32_t)DMA1_Channel1) / 0x14U;   /* 0-7 */
 }
 
-void DMA1_Channel6_IRQHandler(void)
+void DMA_Init_UARTx(DMA_Channel_TypeDef *ch, USART_TypeDef *uart)
 {
-    NVIC_ClearPendingIRQ(DMA1_Channel6_IRQn);
+    /* clocks */
+    RCC->AHB1ENR  |= RCC_AHB1ENR_DMA1EN;
 
-    if (DMA1->ISR & DMA_ISR_TCIF6)                          /* xfer complete   */
-    {
-        DMA1->IFCR = DMA_IFCR_CTCIF6;                       /* clear TC flag   */
-        completeCRC(CRC->DR);                               /* hand result up  */
+    /* 1. Disable channel */
+    ch->CCR &= ~DMA_CCR_EN;
+
+    /* 2. Request mapping (DMAMUX on L4 via CSELR register) */
+    uint32_t req;
+    if      (uart == USART2) req = 4;          /* USART2_TX */
+    else if (uart == USART1) req = 2;          /* USART1_TX */
+    else                     return;           /* unsupported */
+
+    uint32_t idx = chan_index(ch);
+    DMA1_CSELR->CSELR &= ~(0xFU << (idx*4));
+    DMA1_CSELR->CSELR |=  (req  << (idx*4));
+
+    /* 3. Static part of CCR: mem→periph, 8-bit, MINC, TCIE                 */
+    ch->CCR  = 0;
+    ch->CCR |= DMA_CCR_DIR | DMA_CCR_MINC | DMA_CCR_TCIE;
+
+    /* 4. Peripheral address constant                                       */
+    ch->CPAR = (uint32_t)&uart->TDR;
+
+    /* 5. Enable NVIC line                                                  */
+    if      (ch == DMA1_Channel7) NVIC_EnableIRQ(DMA1_Channel7_IRQn);
+    else if (ch == DMA1_Channel4) NVIC_EnableIRQ(DMA1_Channel4_IRQn);
+}
+
+/* ---------- channel-7 (USART2_TX) ---------- */
+void DMA1_Channel7_IRQHandler(void)
+{
+    if (DMA1->ISR & DMA_ISR_TCIF7) {
+        DMA1->IFCR = DMA_IFCR_CTCIF7;          /* clear flag          */
+        extern void on_complete_transfer(void);
+        on_complete_transfer();
     }
+}
 
-    DMA1->IFCR = DMA_IFCR_CGIF6;                            /* clear global    */
+/* (optional) channel-4 (USART1_TX) */
+void DMA1_Channel4_IRQHandler(void)
+{
+    if (DMA1->ISR & DMA_ISR_TCIF4) {
+        DMA1->IFCR = DMA_IFCR_CTCIF4;
+        extern void on_complete_transfer(void);
+        on_complete_transfer();
+    }
 }

@@ -1,6 +1,6 @@
-#include "accelerometer.h"
 #include "SPI.h"
-#include <math.h>
+#include "SysTimer.h"
+#include "accelerometer.h"
 
 /* ADXL345 register addresses */
 #define REG_BW_RATE     0x2C

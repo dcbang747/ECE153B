@@ -12,7 +12,7 @@
 #include "stm32l476xx.h"
 #include "motor.h"
 
-/* ----- pin definitions (same names as you used before) ----------------- */
+/* ----- pin definitions ----------------- */
 #define PIN_A   5u   /* PC5  */
 #define PIN_Bp  9u   /* PC9  */
 #define PIN_Ap  6u   /* PC6  */
@@ -25,7 +25,7 @@
 
 #define COIL_MASK (BIT_A | BIT_Bp | BIT_Ap | BIT_B)
 
-/* ----- exact eight-step clockwise pattern from your old code ----------- */
+/* ----- exact eight-step clockwise ----------- */
 static const uint16_t HalfStep[8] = {
     BIT_A,                  /* 1: A          */
     BIT_A  | BIT_Bp,        /* 2: A  + B'    */

@@ -3,7 +3,7 @@
  *
  * Name(s):
  * Section:
- * Lab: 6C
+ * Project
  */
 
 #ifndef __STM32L476G_DISCOVERY_LED_H

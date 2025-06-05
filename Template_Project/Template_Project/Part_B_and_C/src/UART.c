@@ -1,131 +1,114 @@
- #include "UART.h"
- #include "stm32l476xx.h"
- 
- #define SYSCLK_HZ   80000000UL   // System‑core frequency after SysClock.c config
- #define BAUDRATE    9600UL
- 
- /* ————————————————————————————————————————  Private helpers ———————————————————————————————————————— */
- static uint32_t computeBRR(uint32_t periph_clk, uint32_t baud)
- {
-	 /* For oversampling‑by‑16:
-		  USARTDIV = fCK / baud
-		BRR[15:4] = USARTDIV mantissa, BRR[3:0] = fraction
-		Here we round USARTDIV to the nearest integer and let hardware
-		split mantissa/fraction automatically.                                   */
-	 return (periph_clk + baud / 2U) / baud;
- }
- 
- /* ————————————————————————————————————————  RCC / clock ———————————————————————————————————————— */
- 
- void UART1_Init(void)
- {
-	 /* Enable peripheral clock on APB2                                           */
-	 RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
- 
-	 /* Select SYSCLK (80 MHz) as USART1 clock source → CCIPR[3:2] = 0b11         */
-	 RCC->CCIPR &= ~RCC_CCIPR_USART1SEL;
-	 RCC->CCIPR |=  (3U << 2);
- }
- 
- void UART2_Init(void)
- {
-	 /* Enable peripheral clock on APB1                                           */
-	 RCC->APB1ENR1 |= RCC_APB1ENR1_USART2EN;
- 
-	 /* Select SYSCLK (80 MHz) as USART2 clock source → CCIPR[5:4] = 0b11         */
-	 RCC->CCIPR &= ~RCC_CCIPR_USART2SEL;
-	 RCC->CCIPR |=  (3U << 4);
- }
- 
- /* ————————————————————————————————————————  GPIO ————————————————————————————————————————— */
- 
- void UART1_GPIO_Init(void)
- {
-	 /* PB6 = TX, PB7 = RX  → alternate‑function 7                                */
-	 RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
- 
-	 /* MODER: alternate (10)                                                     */
-	 GPIOB->MODER &= ~(GPIO_MODER_MODE6 | GPIO_MODER_MODE7);
-	 GPIOB->MODER |=  (GPIO_MODER_MODE6_1 | GPIO_MODER_MODE7_1);
- 
-	 /* OTYPER: push‑pull                                                         */
-	 GPIOB->OTYPER &= ~(GPIO_OTYPER_OT6 | GPIO_OTYPER_OT7);
- 
-	 /* OSPEEDR: very‑high speed (11)                                             */
-	 GPIOB->OSPEEDR |= (3U << (6 * 2)) | (3U << (7 * 2));
- 
-	 /* PUPDR: pull‑up (01)                                                       */
-	 GPIOB->PUPDR &= ~(GPIO_PUPDR_PUPD6 | GPIO_PUPDR_PUPD7);
-	 GPIOB->PUPDR |=  (GPIO_PUPDR_PUPD6_0 | GPIO_PUPDR_PUPD7_0);
- 
-	 /* AFRL: AF7                                                                 */
-	 GPIOB->AFR[0] &= ~((0xF << (6 * 4)) | (0xF << (7 * 4)));
-	 GPIOB->AFR[0] |=  (7U << (6 * 4)) | (7U << (7 * 4));
- }
- 
- void UART2_GPIO_Init(void)
- {
-	 /* PA2 = TX, PA3 = RX  → alternate‑function 7                                */
-	 RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
- 
-	 GPIOA->MODER &= ~(GPIO_MODER_MODE2 | GPIO_MODER_MODE3);
-	 GPIOA->MODER |=  (GPIO_MODER_MODE2_1 | GPIO_MODER_MODE3_1);
- 
-	 GPIOA->OTYPER &= ~(GPIO_OTYPER_OT2 | GPIO_OTYPER_OT3);
- 
-	 GPIOA->OSPEEDR |= (3U << (2 * 2)) | (3U << (3 * 2));
- 
-	 GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPD2 | GPIO_PUPDR_PUPD3);
-	 GPIOA->PUPDR |=  (GPIO_PUPDR_PUPD2_0 | GPIO_PUPDR_PUPD3_0);
- 
-	 GPIOA->AFR[0] &= ~((0xF << (2 * 4)) | (0xF << (3 * 4)));
-	 GPIOA->AFR[0] |=  (7U << (2 * 4)) | (7U << (3 * 4));
- }
- 
-void USART_Init(USART_TypeDef* USARTx) {
-	// Disable USART before configuring settings
-	USARTx->CR1 &= ~USART_CR1_UE;
-	
-	// Set Communication Parameters
-	USARTx->CR1 &= ~(USART_CR1_M);     // 00 -> 8 Data Bits
-	USARTx->CR1 &= ~(USART_CR1_OVER8); // 0 -> Oversampling by 16
-	USARTx->CR2 &= ~(USART_CR2_STOP);  // 00 -> 1 Stop Bit
-	
-	// Set Baud Rate
-	// f_CLK = 80 MHz, Baud Rate = 9600 = 80 MHz / DIV -> DIV = 8333 = 0x208D
-	USARTx->BRR = 0x208D;
-	
-	// Enable Transmitter/Receiver
-	USARTx->CR1 |= USART_CR1_TE | USART_CR1_RE;
-	
-	// Enable USART
-	USARTx->CR1 |= USART_CR1_UE;
+/*
+ * ECE 153B – 2-buffer DMA UART (non-blocking printf-style)
+ */
+
+#include <string.h>
+#include <stdio.h>
+#include "UART.h"
+#include "DMA.h"
+#include "motor.h"
+
+#define UART_BAUD  9600U
+
+/* ---------------- private globals ---------------- */
+static DMA_Channel_TypeDef *tx_ch      = DMA1_Channel7;   /* USART2_TX        */
+static volatile uint8_t     buf0[IO_SIZE];
+static volatile uint8_t     buf1[IO_SIZE];
+static volatile uint8_t    *active = buf0;
+static volatile uint8_t    *pend   = buf1;
+static volatile uint16_t    pend_len = 0;
+static volatile uint8_t     tx_busy  = 0;
+
+static char                 line[IO_SIZE];
+static uint16_t             in_len   = 0;
+
+/* ---------------- helpers ---------------- */
+static inline void dma_start(uint8_t *mem, uint16_t len)
+{
+    tx_ch->CCR  &= ~DMA_CCR_EN;             /* disable first        */
+    tx_ch->CMAR  = (uint32_t)mem;
+    tx_ch->CNDTR = len;
+    tx_ch->CCR  |= DMA_CCR_EN;              /* go!                  */
+    USART2->CR3 |= USART_CR3_DMAT;         /* link DMA             */
+    tx_busy      = 1;
 }
 
-uint8_t USART_Read (USART_TypeDef * USARTx) {
-	// SR_RXNE (Read data register not empty) bit is set by hardware
-	while (!(USARTx->ISR & USART_ISR_RXNE));  // Wait until RXNE (RX not empty) bit is set
-	// USART resets the RXNE flag automatically after reading DR
-	return ((uint8_t)(USARTx->RDR & 0xFF));
-	// Reading USART_DR automatically clears the RXNE flag 
+/* ---------------- public init ---------------- */
+void UART2_GPIO_Init(void)
+{
+    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
+
+    /* PA2 TX, PA3 RX – AF7 */
+    GPIOA->MODER   &= ~(3U<<(2*2) | 3U<<(3*2));
+    GPIOA->MODER   |=  (2U<<(2*2) | 2U<<(3*2));
+    GPIOA->AFR[0]  &= ~(0xF<<(2*4) | 0xF<<(3*4));
+    GPIOA->AFR[0]  |=  (7U<<(2*4) | 7U<<(3*4));
 }
 
-void USART_Write(USART_TypeDef * USARTx, uint8_t *buffer, uint32_t nBytes) {
-	int i;
-	// TXE is cleared by a write to the USART_DR register.
-	// TXE is set by hardware when the content of the TDR 
-	// register has been transferred into the shift register.
-	for (i = 0; i < nBytes; i++) {
-		while (!(USARTx->ISR & USART_ISR_TXE));   	// wait until TXE (TX empty) bit is set
-		// Writing USART_DR automatically clears the TXE flag 	
-		USARTx->TDR = buffer[i] & 0xFF;
-		USART_Delay(300);
-	}
-	while (!(USARTx->ISR & USART_ISR_TC));   		  // wait until TC bit is set
-	USARTx->ISR &= ~USART_ISR_TC;
-}   
+void UART2_Init(void)
+{
+    RCC->APB1ENR1 |= RCC_APB1ENR1_USART2EN;
 
-void USART_Delay(uint32_t us) {
-	uint32_t time = 100*us/7;    
-	while(--time);   
+    /* 80 MHz / 9600 = 8333 → 0x208D  */
+    USART2->BRR = 0x208D;
+    USART2->CR1 = USART_CR1_TE | USART_CR1_RE | USART_CR1_RXNEIE;
+    USART2->CR1 |= USART_CR1_UE;
+
+    NVIC_SetPriority(USART2_IRQn, 0);
+    NVIC_EnableIRQ (USART2_IRQn);
+
+    /* DMA helper */
+    DMA_Init_UARTx(tx_ch, USART2);
+}
+
+void USART_Init(USART_TypeDef *u) { (void)u; }   /* compatibility no-op */
+
+/* ---------------- non-blocking print ---------------- */
+void UART_print(char *s)
+{
+    uint16_t len = strlen(s);
+    if (len == 0 || len >= IO_SIZE) return;
+
+    __disable_irq();
+    if (!tx_busy) {                          /* channel idle – send now      */
+        memcpy((void*)active, s, len);
+        dma_start((uint8_t*)active, len);
+    } else {                                 /* DMA busy – queue in pend buf */
+        memcpy((void*)pend,  s, len);
+        pend_len = len;
+    }
+    __enable_irq();
+}
+
+/* ---------------- RX assembler ---------------- */
+static void transfer_data(char ch)
+{
+    if (in_len < IO_SIZE-1) line[in_len++] = ch;
+
+    if (ch == '\n') {                        /* full line ready              */
+        line[in_len-1] = '\0';               /* kill newline                 */
+        extern void UART_onInput(char*,uint32_t);
+        UART_onInput((char*)line, in_len-1);
+        in_len = 0;
+    }
+}
+
+/* ---------------- TX done hook ---------------- */
+void on_complete_transfer(void)
+{
+    tx_busy = 0;
+    if (pend_len) {                          /* swap & fire next             */
+        uint8_t *tmp = active; active = pend; pend = tmp;
+        uint16_t l   = pend_len; pend_len = 0;
+        dma_start((uint8_t*)active, l);
+    }
+}
+
+/* ---------------- IRQ handler ---------------- */
+void USART2_IRQHandler(void)
+{
+    if (USART2->ISR & USART_ISR_RXNE) {              /* byte arrived */
+        char c = (char)USART2->RDR;
+        transfer_data(c);
+    }
 }
