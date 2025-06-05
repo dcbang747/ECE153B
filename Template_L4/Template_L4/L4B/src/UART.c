@@ -48,30 +48,30 @@
  
  /* ————————————————————————————————————————  GPIO ————————————————————————————————————————— */
  
- void UART1_GPIO_Init(void)
- {
-	 /* PB6 = TX, PB7 = RX  → alternate‑function 7                                */
-	 RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
- 
-	 /* MODER: alternate (10)                                                     */
-	 GPIOB->MODER &= ~(GPIO_MODER_MODE6 | GPIO_MODER_MODE7);
-	 GPIOB->MODER |=  (GPIO_MODER_MODE6_1 | GPIO_MODER_MODE7_1);
- 
-	 /* OTYPER: push‑pull                                                         */
-	 GPIOB->OTYPER &= ~(GPIO_OTYPER_OT6 | GPIO_OTYPER_OT7);
- 
-	 /* OSPEEDR: very‑high speed (11)                                             */
-	 GPIOB->OSPEEDR |= (3U << (6 * 2)) | (3U << (7 * 2));
- 
-	 /* PUPDR: pull‑up (01)                                                       */
-	 GPIOB->PUPDR &= ~(GPIO_PUPDR_PUPD6 | GPIO_PUPDR_PUPD7);
-	 GPIOB->PUPDR |=  (GPIO_PUPDR_PUPD6_0 | GPIO_PUPDR_PUPD7_0);
- 
-	 /* AFRL: AF7                                                                 */
-	 GPIOB->AFR[0] &= ~((0xF << (6 * 4)) | (0xF << (7 * 4)));
-	 GPIOB->AFR[0] |=  (7U << (6 * 4)) | (7U << (7 * 4));
- }
- 
+void UART1_GPIO_Init(void)
+	{
+		/* PB8 = TX, PB9 = RX → alternate‑function 7 */
+		RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+
+		/* MODER: alternate (10) */
+		GPIOB->MODER &= ~(GPIO_MODER_MODE8 | GPIO_MODER_MODE9);
+		GPIOB->MODER |=  (GPIO_MODER_MODE8_1 | GPIO_MODER_MODE9_1);
+
+		/* OTYPER: push‑pull */
+		GPIOB->OTYPER &= ~(GPIO_OTYPER_OT8 | GPIO_OTYPER_OT9);
+
+		/* OSPEEDR: very‑high speed (11) */
+		GPIOB->OSPEEDR |= (3U << (8 * 2)) | (3U << (9 * 2));
+
+		/* PUPDR: pull‑up (01) */
+		GPIOB->PUPDR &= ~(GPIO_PUPDR_PUPD8 | GPIO_PUPDR_PUPD9);
+		GPIOB->PUPDR |=  (GPIO_PUPDR_PUPD8_0 | GPIO_PUPDR_PUPD9_0);
+
+		/* AFRH: AF7 for USART1 (pins 8 and 9 are in AFR[1]) */
+		GPIOB->AFR[1] &= ~((0xF << 0) | (0xF << 4));
+		GPIOB->AFR[1] |=  (7U << 0) | (7U << 4);
+	}
+
  void UART2_GPIO_Init(void)
  {
 	 /* PA2 = TX, PA3 = RX  → alternate‑function 7                                */

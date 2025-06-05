@@ -16,28 +16,28 @@ extern void Error_Handler(void);
 //                        I2C GPIO Initialization
 //===============================================================================
 void I2C_GPIO_Init(void)
-{
-    /* Enable GPIOB clock */
-    RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
+	{
+		/* Enable GPIOB clock */
+		RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN;
 
-    /* PB6 & PB7 → Alternate‑function mode */
-    GPIOB->MODER  &= ~(GPIO_MODER_MODE6 | GPIO_MODER_MODE7);
-    GPIOB->MODER  |=  (GPIO_MODER_MODE6_1 | GPIO_MODER_MODE7_1);
+		/* PB8 & PB9 → Alternate‑function mode */
+		GPIOB->MODER &= ~(GPIO_MODER_MODE8 | GPIO_MODER_MODE9);
+		GPIOB->MODER |=  (GPIO_MODER_MODE8_1 | GPIO_MODER_MODE9_1);
 
-    /* Open‑drain */
-    GPIOB->OTYPER |= GPIO_OTYPER_OT6 | GPIO_OTYPER_OT7;
+		/* Open‑drain */
+		GPIOB->OTYPER |= GPIO_OTYPER_OT8 | GPIO_OTYPER_OT9;
 
-    /* Very‑high speed */
-    GPIOB->OSPEEDR |= (3U << (6 * 2)) | (3U << (7 * 2));
+		/* Very‑high speed */
+		GPIOB->OSPEEDR |= (3U << (8 * 2)) | (3U << (9 * 2));
 
-    /* Pull‑ups */
-    GPIOB->PUPDR  &= ~(GPIO_PUPDR_PUPD6 | GPIO_PUPDR_PUPD7);
-    GPIOB->PUPDR  |=  (GPIO_PUPDR_PUPD6_0 | GPIO_PUPDR_PUPD7_0);
+		/* Pull‑ups */
+		GPIOB->PUPDR &= ~(GPIO_PUPDR_PUPD8 | GPIO_PUPDR_PUPD9);
+		GPIOB->PUPDR |=  (GPIO_PUPDR_PUPD8_0 | GPIO_PUPDR_PUPD9_0);
 
-    /* AF4 for I²C1 */
-    GPIOB->AFR[0] &= ~((0xF << (6 * 4)) | (0xF << (7 * 4)));
-    GPIOB->AFR[0] |=  (4U << (6 * 4)) | (4U << (7 * 4));
-}
+		/* AF4 for I²C1 (pins 8 and 9 are in AFR[1]) */
+		GPIOB->AFR[1] &= ~((0xF << 0) | (0xF << 4));
+		GPIOB->AFR[1] |=  (4U << 0) | (4U << 4);
+	}
 	
 #define I2C_TIMINGR_PRESC_POS	28
 #define I2C_TIMINGR_SCLDEL_POS	20
@@ -48,8 +48,8 @@ void I2C_GPIO_Init(void)
 #define PRESC   7U     // Prescaler = 7 ? 10 MHz I2C clock
 #define SCLDEL  9U     // 1000 ns (tSCLDEL = (9+1)*100ns = 1000ns)
 #define SDADEL  12U    // 1250 ns (tSDADEL = (12+1)*100ns = 1300ns > 1250ns)
-#define SCLH    39U    // 4.0 �s (40 * 100ns)
-#define SCLL    46U    // 4.7 �s (47 * 100ns)
+#define SCLH    39U    // 4.0 �s (40 * 100ns)
+#define SCLL    46U    // 4.7 �s (47 * 100ns)
 
 //===============================================================================
 //                          I2C Initialization
