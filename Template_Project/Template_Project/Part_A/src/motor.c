@@ -1,95 +1,95 @@
 /*
  * ECE 153B – Project Part A
- * GPIOC5, 6, 8, 9 half-step driver (non-blocking)
+ * 28BYJ-48 half-step driver, GPIOC 5 6 8 9
  *
- * Pin map (ULN2003 → NEMA-17 coils):
- *   IN1 → PC5   IN2 → PC6   IN3 → PC8   IN4 → PC9
- *
- *  dire :  +1 = CW   –1 = CCW   0 = stop
+ * Coil map (matches your blocking demo):
+ *   PC5  →  A
+ *   PC9  →  B'
+ *   PC6  →  A'
+ *   PC8  →  B
  */
 
 #include "stm32l476xx.h"
 #include "motor.h"
 
-/* ────────────────────── GPIO helpers ────────────────────── */
-#define P1_PIN      5u
-#define P2_PIN      6u
-#define P3_PIN      8u
-#define P4_PIN      9u
+/* ----- pin definitions (same names as you used before) ----------------- */
+#define PIN_A   5u   /* PC5  */
+#define PIN_Bp  9u   /* PC9  */
+#define PIN_Ap  6u   /* PC6  */
+#define PIN_B   8u   /* PC8  */
 
-#define P1_BIT      (1u << P1_PIN)      /* GPIO_ODR bit for PC5  */
-#define P2_BIT      (1u << P2_PIN)      /* GPIO_ODR bit for PC6  */
-#define P3_BIT      (1u << P3_PIN)      /* GPIO_ODR bit for PC8  */
-#define P4_BIT      (1u << P4_PIN)      /* GPIO_ODR bit for PC9  */
+#define BIT_A   (1U << PIN_A )
+#define BIT_Bp  (1U << PIN_Bp)
+#define BIT_Ap  (1U << PIN_Ap)
+#define BIT_B   (1U << PIN_B )
 
-#define COIL_MASK   (P1_BIT | P2_BIT | P3_BIT | P4_BIT)
-#define CLEAR_MASK  (~COIL_MASK)
+#define COIL_MASK (BIT_A | BIT_Bp | BIT_Ap | BIT_B)
 
-/* ────────────────── 8-step half-step table (CCW order) ────────────────── */
-static const uint32_t HalfStep[8] = {
-    P1_BIT | P4_BIT,  /* 1001 */
-    P1_BIT,           /* 1000 */
-    P1_BIT | P3_BIT,  /* 1100 */
-    P3_BIT,           /* 0100 */
-    P2_BIT | P3_BIT,  /* 0110 */
-    P2_BIT,           /* 0010 */
-    P2_BIT | P4_BIT,  /* 0011 */
-    P4_BIT            /* 0001 */
+/* ----- exact eight-step clockwise pattern from your old code ----------- */
+static const uint16_t HalfStep[8] = {
+    BIT_A,                  /* 1: A          */
+    BIT_A  | BIT_Bp,        /* 2: A  + B'    */
+    BIT_Bp,                 /* 3:      B'    */
+    BIT_Bp | BIT_Ap,        /* 4:      B'+A' */
+    BIT_Ap,                 /* 5:        A'  */
+    BIT_Ap | BIT_B,         /* 6:        A'+B*/
+    BIT_B,                  /* 7:           B*/
+    BIT_B  | BIT_A          /* 8:        B +A*/
 };
 
-/* ───────────────────────── driver state ───────────────────────── */
-static volatile int8_t dire = 0;      /* +1 CW, –1 CCW, 0 stop    */
-static volatile uint8_t step = 0;     /* index in HalfStep[]      */
+/* ----- driver state ---------------------------------------------------- */
+static volatile int8_t  dire = 0;   /* +1 = CW, −1 = CCW, 0 = stop */
+static volatile uint8_t idx  = 0;   /* current table index         */
 
-/* ───────────────────────── API functions ─────────────────────── */
+/* ----------------------------------------------------------------------- */
 void Motor_Init(void)
 {
-    /* Enable GPIOC clock */
+    /* enable GPIOC clock */
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOCEN;
 
-    /* ---- MODER:   01 (general-purpose output) ---- */
+    /* PC5,6,8,9 → output, push-pull, fast, no pull */
     GPIOC->MODER &=
-        ~((3u << (P1_PIN*2)) | (3u << (P2_PIN*2)) |
-          (3u << (P3_PIN*2)) | (3u << (P4_PIN*2)));
+        ~(3U<<(PIN_A*2) | 3U<<(PIN_Ap*2) | 3U<<(PIN_B*2) | 3U<<(PIN_Bp*2));
     GPIOC->MODER |=
-        (1u << (P1_PIN*2)) | (1u << (P2_PIN*2)) |
-        (1u << (P3_PIN*2)) | (1u << (P4_PIN*2));
+         (1U<<(PIN_A*2) | 1U<<(PIN_Ap*2) | 1U<<(PIN_B*2) | 1U<<(PIN_Bp*2));
 
-    /* ---- OTYPER: push-pull (reset state = 0) ---- */
-    GPIOC->OTYPER &=
-        ~((1u << P1_PIN) | (1u << P2_PIN) |
-          (1u << P3_PIN) | (1u << P4_PIN));
+    GPIOC->OTYPER &= ~(BIT_A | BIT_Ap | BIT_B | BIT_Bp);
 
-    /* ---- OSPEEDR: 10 (fast) ---- */
     GPIOC->OSPEEDR &=
-        ~((3u << (P1_PIN*2)) | (3u << (P2_PIN*2)) |
-          (3u << (P3_PIN*2)) | (3u << (P4_PIN*2)));
+        ~(3U<<(PIN_A*2) | 3U<<(PIN_Ap*2) | 3U<<(PIN_B*2) | 3U<<(PIN_Bp*2));
     GPIOC->OSPEEDR |=
-        (2u << (P1_PIN*2)) | (2u << (P2_PIN*2)) |
-        (2u << (P3_PIN*2)) | (2u << (P4_PIN*2));
+         (2U<<(PIN_A*2) | 2U<<(PIN_Ap*2) | 2U<<(PIN_B*2) | 2U<<(PIN_Bp*2));
 
-    /* ---- PUPDR: 00 (no pull) ---- */
     GPIOC->PUPDR &=
-        ~((3u << (P1_PIN*2)) | (3u << (P2_PIN*2)) |
-          (3u << (P3_PIN*2)) | (3u << (P4_PIN*2)));
+        ~(3U<<(PIN_A*2) | 3U<<(PIN_Ap*2) | 3U<<(PIN_B*2) | 3U<<(PIN_Bp*2));
 
-    /* Make sure the coils are de-energised */
+    /* de-energise coils */
     GPIOC->ODR &= ~COIL_MASK;
 }
 
-void rotate(void)             /* Called from SysTick – keep it tiny */
+/* called from SysTick → one half-step every T_MIN_MS ms */
+void rotate(void)
 {
     if (dire == 0) {
-        return;               /* motor stopped                      */
+        return;                      /* stopped */
     }
 
-    /* HalfStep[] is CCW; subtracting dire performs CW when dire = +1 */
-    step = (uint8_t)((step - dire) & 0x07);
+    /* advance or retreat exactly as your blocking code did */
+    idx = (uint8_t)((idx + dire + 8) & 0x07);
 
-    GPIOC->ODR = (GPIOC->ODR & CLEAR_MASK) | HalfStep[step];
+    /* drive coils */
+    GPIOC->ODR = (GPIOC->ODR & ~COIL_MASK) | HalfStep[idx];
 }
 
-void setDire(int8_t direction)   /* direction ∈ {–1, 0, +1} */
+void setDire(int8_t direction)   /* −1, 0, +1 */
 {
     dire = direction;
+
+    if (dire == 0) {
+        /* immediately release coils */
+        GPIOC->ODR &= ~COIL_MASK;
+    } else {
+        /* energise the current index so the first tick isn’t a double-jump */
+        GPIOC->ODR = (GPIOC->ODR & ~COIL_MASK) | HalfStep[idx];
+    }
 }
