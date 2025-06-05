@@ -39,10 +39,12 @@ void UART2_GPIO_Init(void)
     RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN;
 
     /* PA2 TX, PA3 RX – AF7 */
-    GPIOA->MODER   &= ~(3U<<(2*2) | 3U<<(3*2));
-    GPIOA->MODER   |=  (2U<<(2*2) | 2U<<(3*2));
-    GPIOA->AFR[0]  &= ~(0xF<<(2*4) | 0xF<<(3*4));
-    GPIOA->AFR[0]  |=  (7U<<(2*4) | 7U<<(3*4));
+        GPIOA->MODER   &= ~(3U<<(2*2) | 3U<<(15*2));
+        GPIOA->MODER   |=  (2U<<(2*2) | 2U<<(15*2));
+        GPIOA->AFR[0]  &= ~(0xF<<(2*4));
+        GPIOA->AFR[0]  |=  (7U<<(2*4));
+        GPIOA->AFR[1]  &= ~(0xF<<((15-8)*4));
+        GPIOA->AFR[1]  |=  (7U<<((15-8)*4));
 }
 
 void UART2_Init(void)
