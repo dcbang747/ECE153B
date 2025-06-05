@@ -74,7 +74,6 @@ int main(void)
     Motor_Init();
     SysTick_Init();
 
-    UART2_GPIO_Init();
     UART2_Init();
 
     LED_Init();
@@ -112,17 +111,17 @@ int main(void)
             /* automatic control */
             float T = readTempC();
             if (fabsf(T - lastTemp) >= 0.5f) {
-                sprintf(out,"Temp = %.1f°C\r\n", T);
+                sprintf(out,"Temp = %.1fC\r\n", T);
                 UART_print(out);
                 lastTemp = T;
             }
 
             if (hold_ms == 0) {
                 if (door == CLOSED && T >= 28.0f) {
-                    UART_print("Temperature high – opening\r\n");
+                    UART_print("Temperature high - opening\r\n");
                     door_up();
                 } else if (door == OPEN && T <= 25.0f) {
-                    UART_print("Temperature low – closing\r\n");
+                    UART_print("Temperature low - closing\r\n");
                     door_down();
                 }
             }

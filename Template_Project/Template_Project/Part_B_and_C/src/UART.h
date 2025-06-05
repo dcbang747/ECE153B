@@ -6,25 +6,21 @@
  * Project
  */
 
-#ifndef __STM32L476R_NUCLEO_UART_H
-#define __STM32L476R_NUCLEO_UART_H
+#ifndef __STM32L476_UART_H
+#define __STM32L476_UART_H
 
 #include "stm32l476xx.h"
+#include <stdint.h>
 
-#define BufferSize 32
-#define IO_SIZE 256
+#define IO_SIZE      256        /* size of each TX buffer            */
+#define QUEUE_DEPTH   32        /* #queued strings (≥2)              */
 
-void UART1_Init(void);
-void UART2_Init(void);
-void UART1_GPIO_Init(void);
-void UART2_GPIO_Init(void);
+/* public API */
+void UART1_Init(void);          /* Bluetooth */
+void UART2_Init(void);          /* USB VCP   */
 
-void USART_Init(USART_TypeDef* USARTx);
-
-void USART1_IRQHandler(void);
-void USART2_IRQHandler(void);
-
-void UART_print(char *data);
-void UART_onInput(char* inputs, uint32_t size);
+void UART_print(char *s);       /* non-blocking printf-style */
+void UART_onInput(char *buf, uint32_t len);   /* defined in main */
 
 #endif
+
