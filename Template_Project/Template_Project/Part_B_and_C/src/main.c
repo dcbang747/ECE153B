@@ -47,25 +47,46 @@ static void door_down  (void){ setDire(-1); door = MOVING_DOWN; }
 static char  out[IO_SIZE];
 static float lastTemp   = -1000.f;
 static int32_t hold_ms  = 0;                 /* manual override timer */
+static int32_t state  = 0; 
 
 void UART_onInput(char *cmd, uint32_t n)
 {
+	if(hold_ms <1 || state == 3){
     (void)n;
     if (!strcmp(cmd,"open") || !strcmp(cmd,"o")){
         UART_print("Console: opening door\r\n");
         door_down();
         hold_ms = 10000;
+				state = 0;
     } else if (!strcmp(cmd,"close") || !strcmp(cmd,"c")){
         UART_print("Console: closing door\r\n");
         door_up();
         hold_ms = 10000;
+				state = 0;
     } else if (!strcmp(cmd,"stop") || !strcmp(cmd,"s")){
         UART_print("Console: stop\r\n");
         door_stop();
-        hold_ms = 10000;
+        hold_ms = 5000;
+				state = 3;
     } else {
         UART_print("Commands: open|close|stop\r\n");
     }
+	}
+	else if(hold_ms >1){
+		(void)n;
+    if ((!strcmp(cmd,"open") || !strcmp(cmd,"o"))){
+				state = 1;
+    } else if (!strcmp(cmd,"close") || !strcmp(cmd,"c")){
+				state = 2;
+    } else if (!strcmp(cmd,"stop") || !strcmp(cmd,"s")){
+        UART_print("Console: stop\r\n");
+        door_stop();
+        hold_ms = 5000;
+				state = 3;
+    } else {
+        UART_print("Commands: open|close|stop\r\n");
+    }
+	}
 }
 
 int main(void)
@@ -120,11 +141,24 @@ int main(void)
                 if (door == CLOSED && T >= 28.0f) {
                     UART_print("Temperature high - opening\r\n");
                     door_down();
+										
                 } else if (door == OPEN && T <= 25.0f) {
                     UART_print("Temperature low - closing\r\n");
                     door_up();
                 }
             }
+						
+						if (state == 1 && hold_ms == 0){
+								UART_print("Console: opening door\r\n");
+								door_down();
+								hold_ms = 10000;
+								state = 0;
+						} else if (state == 2 && hold_ms == 0){
+								UART_print("Console: closing door\r\n");
+								door_up();
+								hold_ms = 10000;
+								state = 0;
+						}						
         }
 
         /* ----- 1 s heartbeat ---------------------------------------- */

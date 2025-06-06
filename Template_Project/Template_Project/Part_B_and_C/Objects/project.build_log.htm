@@ -27,19 +27,19 @@ Project File Date:  06/05/2025
 <h2>Output:</h2>
 *** Using Compiler 'V6.21', folder: 'C:\Keil_v5\ARM\ARMCLANG\Bin'
 Build target 'Target 1'
-src/main.c(114): warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
-  114 |                 sprintf(out,"Temp = %.1fC\r\n", T);
+src/main.c(135): warning: implicit conversion increases floating-point precision: 'float' to 'double' [-Wdouble-promotion]
+  135 |                 sprintf(out,"Temp = %.1fC\r\n", T);
       |                 ~~~~~~~                         ^
-src/main.c(101): warning: mixing declarations and code is incompatible with standards before C99 [-Wdeclaration-after-statement]
-  101 |             double ax, ay, az;
+src/main.c(122): warning: mixing declarations and code is incompatible with standards before C99 [-Wdeclaration-after-statement]
+  122 |             double ax, ay, az;
       |                    ^
-src/main.c(90): warning: mixing declarations and code is incompatible with standards before C99 [-Wdeclaration-after-statement]
-   90 |     uint32_t ms_100  = 0;          /* 0.1 s sensor poll */
+src/main.c(111): warning: mixing declarations and code is incompatible with standards before C99 [-Wdeclaration-after-statement]
+  111 |     uint32_t ms_100  = 0;          /* 0.1 s sensor poll */
       |              ^
 3 warnings generated.
 compiling main.c...
 linking...
-Program Size: Code=13396 RO-data=1236 RW-data=8 ZI-data=10368  
+Program Size: Code=13836 RO-data=1236 RW-data=8 ZI-data=10376  
 FromELF: creating hex file...
 ".\Objects\project.axf" - 0 Error(s), 3 Warning(s).
 
