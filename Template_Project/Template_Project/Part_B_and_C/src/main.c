@@ -7,8 +7,8 @@
  *  – UART2 + DMA prints / console
  *
  *  Door logic:
- *      closed   ↔ |Ay| > 0.8 g
- *      open     ↔ |Az| > 0.8 g
+ *      closed   ↔ |Ay| > 0.95 g
+ *      open     ↔ |Az| > 0.95 g
  *      temp_hi  = 28 °C → open
  *      temp_lo  = 25 °C → close
  */
@@ -53,16 +53,16 @@ void UART_onInput(char *cmd, uint32_t n)
     (void)n;
     if (!strcmp(cmd,"open") || !strcmp(cmd,"o")){
         UART_print("Console: opening door\r\n");
-        door_up();
-        hold_ms = 4000;
+        door_down();
+        hold_ms = 6000;
     } else if (!strcmp(cmd,"close") || !strcmp(cmd,"c")){
         UART_print("Console: closing door\r\n");
-        door_down();
-        hold_ms = 4000;
+        door_up();
+        hold_ms = 6000;
     } else if (!strcmp(cmd,"stop") || !strcmp(cmd,"s")){
         UART_print("Console: stop\r\n");
         door_stop();
-        hold_ms = 4000;
+        hold_ms = 6000;
     } else {
         UART_print("Commands: open|close|stop\r\n");
     }
@@ -105,8 +105,8 @@ int main(void)
             if (hold_ms > 0) hold_ms -= 100;
 
             /* door-moving end-stops */
-            if (door == MOVING_UP   && fabs(az) > 0.8) { door = OPEN;   door_stop(); UART_print("Door opened\r\n"); }
-            if (door == MOVING_DOWN && fabs(ay) > 0.8) { door = CLOSED; door_stop(); UART_print("Door closed\r\n"); }
+            if (door == MOVING_UP   && fabs(az) > 1.00) { door = CLOSED;   door_stop(); UART_print("Door closed\r\n"); }
+            if (door == MOVING_DOWN && fabs(ay) > 1.15) { door = OPEN; door_stop(); UART_print("Door opened\r\n"); }
 
             /* automatic control */
             float T = readTempC();
@@ -119,10 +119,10 @@ int main(void)
             if (hold_ms == 0) {
                 if (door == CLOSED && T >= 28.0f) {
                     UART_print("Temperature high - opening\r\n");
-                    door_up();
+                    door_down();
                 } else if (door == OPEN && T <= 25.0f) {
                     UART_print("Temperature low - closing\r\n");
-                    door_down();
+                    door_up();
                 }
             }
         }
