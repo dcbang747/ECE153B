@@ -10,7 +10,7 @@
 #include "motor.h"
 
 static uint32_t volatile step;
-#define T_MIN_MS   2u              /* experimentally measured minimum delay */
+#define T_MIN_MS   6u              /* experimentally measured minimum delay */
 static volatile uint32_t tickCnt = 0;
 
 void SysTick_Init(void) {

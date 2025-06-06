@@ -27,7 +27,7 @@ void DMA_UART_TX_Init(DMA_Channel_TypeDef *ch, USART_TypeDef *uart)
     ch->CPAR = (uint32_t)&uart->TDR;
 
     /* ---- DMAMUX request number ---- */
-    uint32_t req = (uart == USART1) ? 1 : 2;    /* see RM0394 Table 39 */
+    uint32_t req = (uart == USART1) ? 2 : 4;    /* see RM0394 Table 39 */
     uint32_t idx = chan_idx(ch);
     DMA1_CSELR->CSELR &= ~(0xFU << (idx * 4));
     DMA1_CSELR->CSELR |=  (req  << (idx * 4));

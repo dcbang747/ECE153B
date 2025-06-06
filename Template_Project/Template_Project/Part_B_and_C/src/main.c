@@ -54,15 +54,15 @@ void UART_onInput(char *cmd, uint32_t n)
     if (!strcmp(cmd,"open") || !strcmp(cmd,"o")){
         UART_print("Console: opening door\r\n");
         door_down();
-        hold_ms = 6000;
+        hold_ms = 10000;
     } else if (!strcmp(cmd,"close") || !strcmp(cmd,"c")){
         UART_print("Console: closing door\r\n");
         door_up();
-        hold_ms = 6000;
+        hold_ms = 10000;
     } else if (!strcmp(cmd,"stop") || !strcmp(cmd,"s")){
         UART_print("Console: stop\r\n");
         door_stop();
-        hold_ms = 6000;
+        hold_ms = 10000;
     } else {
         UART_print("Commands: open|close|stop\r\n");
     }
@@ -74,7 +74,7 @@ int main(void)
     Motor_Init();
     SysTick_Init();
 
-    UART2_Init();
+    UART1_Init();
 
     LED_Init();
     SPI1_GPIO_Init();
@@ -105,8 +105,8 @@ int main(void)
             if (hold_ms > 0) hold_ms -= 100;
 
             /* door-moving end-stops */
-            if (door == MOVING_UP   && fabs(az) > 1.00) { door = CLOSED;   door_stop(); UART_print("Door closed\r\n"); }
-            if (door == MOVING_DOWN && fabs(ay) > 1.15) { door = OPEN; door_stop(); UART_print("Door opened\r\n"); }
+            if (door == MOVING_UP   && fabs(az) > 1 && fabs(ay) < 0.12) { door = CLOSED;   door_stop(); UART_print("Door closed\r\n"); }
+            if (door == MOVING_DOWN && fabs(ay) > 1 && fabs(az) < 0.11) { door = OPEN; door_stop(); UART_print("Door opened\r\n"); }
 
             /* automatic control */
             float T = readTempC();

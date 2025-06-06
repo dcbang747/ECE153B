@@ -129,12 +129,21 @@ static uint16_t in_len = 0;
 
 static void rx_byte(char c)
 {
-    if (in_len < IO_SIZE-1) line[in_len++] = c;
-    if (c == '\n') {
-        line[in_len-1] = '\0';
-        UART_onInput(line, in_len-1);
-        in_len = 0;
+    /* Treat CR as an alias for LF so either terminator works                */
+    if (c == '\r')
+        c = '\n';
+
+    /* If not newline, store the byte and return                             */
+    if (c != '\n') {
+        if (in_len < IO_SIZE - 1)
+            line[in_len++] = c;
+        return;
     }
+
+    /* New-line received → terminate string, dispatch, reset                 */
+    line[in_len] = '\0';                  /* NUL-terminate                  */
+    UART_onInput(line, in_len);           /* user callback                  */
+    in_len = 0;                           /* start fresh                    */
 }
 
 /* ---------- USART IRQ (1 & 2 share same body) ---------- */
